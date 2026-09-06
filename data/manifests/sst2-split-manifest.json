@@ -1,0 +1,49 @@
+{
+  "dataset": {
+    "archive_sha256": "d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa",
+    "archive_size_bytes": 7439277,
+    "archive_url": "https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
+    "configuration": "sst2",
+    "legacy_loader_commit": "dff6c92c80fbfac456349a531c0a4521c2b0c8f8",
+    "name": "glue"
+  },
+  "integrity": {
+    "all_pairwise_disjoint": true,
+    "test_final_unseen_overlap": 0,
+    "training_final_unseen_overlap": 0,
+    "training_test_overlap": 0,
+    "validation_union_complete": true
+  },
+  "partitions": {
+    "Test": {
+      "class_counts": {
+        "0": 201,
+        "1": 235
+      },
+      "content_sha256": "33fbc75d6cec4eda466ef46448e91bfdcf5ae620927cda3a693ff6f17319e9b6",
+      "indices_file": "sst2-test-indices.json",
+      "indices_sha256": "83d6bdad006418cd841167d938f835561dc13b9ccd464ad21ebe7dabeb0b2394",
+      "row_count": 436,
+      "source_split": "validation"
+    },
+    "Training": {
+      "class_counts": {
+        "0": 29780,
+        "1": 37569
+      },
+      "content_sha256": "9fdcc6f26d93efcf918c1db94c003ba2df4a6b98bd8841d1dcf3ea445f17f63f",
+      "row_count": 67349,
+      "source_split": "train"
+    },
+    "Validation (Unseen)": {
+      "row_count": 436,
+      "sha256": "742b8d39222a0a840443cb9ccc864d26b6854ca6a606efa58909a4a268a30763"
+    }
+  },
+  "schema_version": 1,
+  "split_rule": {
+    "permutation_call": "torch.randperm(872, generator=torch.Generator().manual_seed(42))",
+    "seed": 42,
+    "torch_version": "2.1.2+cu121"
+  }
+}

@@ -1,0 +1,20 @@
+diff --git a/examples/legacies/examples_seq2seq/run_seq2seq.py b/examples/legacies/examples_seq2seq/run_seq2seq.py
+--- a/examples/legacies/examples_seq2seq/run_seq2seq.py
++++ b/examples/legacies/examples_seq2seq/run_seq2seq.py
+@@ -375,9 +375,13 @@ def main():
+     # These information are only used in the compute_metrics.
+     # We will assume that the test/eval dataloader does not change the order of
+     # the data.
+-    data_info = {"eval": eval_datasets[data_args.eval_dataset_name[0]]['extra_fields'],
+-                 "test": test_datasets[data_args.test_dataset_name[0]]['extra_fields'],
+-                 "train": train_dataset['extra_fields']}
++    data_info = {}
++    if training_args.do_eval:
++        data_info["eval"] = eval_datasets[data_args.eval_dataset_name[0]]['extra_fields']
++    if training_args.do_test:
++        data_info["test"] = test_datasets[data_args.test_dataset_name[0]]['extra_fields']
++    if training_args.do_train:
++        data_info["train"] = train_dataset['extra_fields']
+     def compute_metrics(eval_preds):
+         preds, labels, data_info = eval_preds
+         post_processor = AutoPostProcessor.get(data_args.dataset_name[0], tokenizer,

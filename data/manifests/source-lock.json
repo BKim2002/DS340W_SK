@@ -1,0 +1,135 @@
+{
+  "dataset": {
+    "cache_relative_path": "inputs",
+    "configuration": "sst2",
+    "dataset_infos": {
+      "relative_path": "dataset/dataset_infos.json",
+      "sha256": "8619953890393d781426d5b6e3d31adf140ecf05d8dfd2244b5156cd91a6fc35",
+      "size": 28682,
+      "url": "https://raw.githubusercontent.com/huggingface/datasets/dff6c92c80fbfac456349a531c0a4521c2b0c8f8/datasets/glue/dataset_infos.json"
+    },
+    "dataset_name": "glue",
+    "loader_script": {
+      "relative_path": "dataset/glue.py",
+      "sha256": "367527feace8a5c5d1e4838c9395165726bc692fb2e0fc108e70e2c5f25f3be5",
+      "size": 28751,
+      "url": "https://raw.githubusercontent.com/huggingface/datasets/dff6c92c80fbfac456349a531c0a4521c2b0c8f8/datasets/glue/glue.py"
+    },
+    "offline_loader": "datasets.load_dataset",
+    "provenance_mirror": {
+      "executable_source": false,
+      "repo_id": "nyu-mll/glue",
+      "repo_type": "dataset",
+      "revision": "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c"
+    },
+    "raw_archive": {
+      "relative_path": "dataset/raw/SST-2.zip",
+      "sha256": "d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa",
+      "size": 7439277,
+      "url": "https://dl.fbaipublicfiles.com/glue/data/SST-2.zip"
+    },
+    "repository_url": "https://github.com/huggingface/datasets.git",
+    "requested_revision": "dff6c92c80fbfac456349a531c0a4521c2b0c8f8",
+    "resolved_revision": "dff6c92c80fbfac456349a531c0a4521c2b0c8f8",
+    "revision_kind": "peeled_git_commit"
+  },
+  "generated_at_utc": "2026-09-06T16:11:25Z",
+  "model": {
+    "allow_patterns": [
+      "config.json",
+      "generation_config.json",
+      "pytorch_model.bin",
+      "special_tokens_map.json",
+      "spiece.model",
+      "tokenizer.json",
+      "tokenizer_config.json"
+    ],
+    "cache_relative_path": "hub/models--google--t5-base-lm-adapt/snapshots/bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf",
+    "files": [
+      {
+        "relative_path": "config.json",
+        "sha256": "32c32d9ed5d341ba0054afe354a3765474ddc781e9f7785dd4859099d75f39f9",
+        "size": 655
+      },
+      {
+        "relative_path": "generation_config.json",
+        "sha256": "f5a1c7e2be8092018d8835128987edf0111637dd98e90599cc80310fef75d95a",
+        "size": 147
+      },
+      {
+        "relative_path": "pytorch_model.bin",
+        "sha256": "00ebc4e1a7366f129ee2491d85d5b1a10b27c0303c8514e3fbefd36b01acf607",
+        "size": 990434381
+      },
+      {
+        "relative_path": "special_tokens_map.json",
+        "sha256": "4720c0fddbe4c5991334f85ad7073d9bd0a294a8ba4641a2f8dab614ca825949",
+        "size": 1786
+      },
+      {
+        "relative_path": "spiece.model",
+        "sha256": "d60acb128cf7b7f2536e8f38a5b18a05535c9e14c7a355904270e15b0945ea86",
+        "size": 791656
+      },
+      {
+        "relative_path": "tokenizer.json",
+        "sha256": "0b1a5e2e0327534e124572fef5c726f364b9eee770a97bfe1fd022c405ea1da0",
+        "size": 1389370
+      },
+      {
+        "relative_path": "tokenizer_config.json",
+        "sha256": "2d4a9f067c2df0cc951789edc07c57eb741bc68f229b7689caa66449fca5f44a",
+        "size": 2114
+      }
+    ],
+    "offline_loader": "transformers.AutoModelForSeq2SeqLM.from_pretrained",
+    "repo_id": "google/t5-base-lm-adapt",
+    "repo_type": "model",
+    "repository_url": "https://huggingface.co/google/t5-base-lm-adapt",
+    "requested_revision": "bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf",
+    "resolved_revision": "bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf",
+    "transport": "huggingface_hub.snapshot_download"
+  },
+  "opendelta": {
+    "repository_url": "https://github.com/thunlp/OpenDelta.git",
+    "requested_revision": "20e426f716ea53618657cd34bbfc4b347b98cd74",
+    "resolved_revision": "20e426f716ea53618657cd34bbfc4b347b98cd74"
+  },
+  "schema_version": 1,
+  "tokenizer": {
+    "cache_relative_path": "hub/models--google--t5-base-lm-adapt/snapshots/bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf",
+    "files": [
+      {
+        "relative_path": "special_tokens_map.json",
+        "sha256": "4720c0fddbe4c5991334f85ad7073d9bd0a294a8ba4641a2f8dab614ca825949",
+        "size": 1786
+      },
+      {
+        "relative_path": "spiece.model",
+        "sha256": "d60acb128cf7b7f2536e8f38a5b18a05535c9e14c7a355904270e15b0945ea86",
+        "size": 791656
+      },
+      {
+        "relative_path": "tokenizer.json",
+        "sha256": "0b1a5e2e0327534e124572fef5c726f364b9eee770a97bfe1fd022c405ea1da0",
+        "size": 1389370
+      },
+      {
+        "relative_path": "tokenizer_config.json",
+        "sha256": "2d4a9f067c2df0cc951789edc07c57eb741bc68f229b7689caa66449fca5f44a",
+        "size": 2114
+      }
+    ],
+    "offline_loader": "transformers.AutoTokenizer.from_pretrained",
+    "repo_id": "google/t5-base-lm-adapt",
+    "repository_url": "https://huggingface.co/google/t5-base-lm-adapt",
+    "requested_revision": "bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf",
+    "resolved_revision": "bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf"
+  },
+  "tools": {
+    "datasets": "1.17.0",
+    "huggingface_hub": "0.10.1",
+    "python": "3.10.12",
+    "transformers": "4.20.1"
+  }
+}

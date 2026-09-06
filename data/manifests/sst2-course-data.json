@@ -1,0 +1,42 @@
+{
+  "dataset": {
+    "configuration": "sst2",
+    "legacy_loader_commit": "dff6c92c80fbfac456349a531c0a4521c2b0c8f8",
+    "name": "glue",
+    "source_inputs": {
+      "dataset_infos": {
+        "relative_path": "dataset/dataset_infos.json",
+        "sha256": "8619953890393d781426d5b6e3d31adf140ecf05d8dfd2244b5156cd91a6fc35",
+        "size_bytes": 28682
+      },
+      "loader_script": {
+        "relative_path": "dataset/glue.py",
+        "sha256": "367527feace8a5c5d1e4838c9395165726bc692fb2e0fc108e70e2c5f25f3be5",
+        "size_bytes": 28751
+      },
+      "raw_archive": {
+        "relative_path": "dataset/raw/SST-2.zip",
+        "sha256": "d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa",
+        "size_bytes": 7439277,
+        "url": "https://dl.fbaipublicfiles.com/glue/data/SST-2.zip"
+      }
+    }
+  },
+  "partitions": {
+    "Test": {
+      "file": "sst2-test.jsonl",
+      "row_count": 436,
+      "sha256": "f66182758e73fc1c7918d68810c57dc2699f5fda59ebc9be6ebc78af1758c575",
+      "size_bytes": 61457,
+      "source_split": "validation"
+    },
+    "Training": {
+      "file": "sst2-training.jsonl",
+      "row_count": 67349,
+      "sha256": "af58ad63483a33861ded0d2bb688f7f5394ebd6784ebea953add529a572e6652",
+      "size_bytes": 6152171,
+      "source_split": "train"
+    }
+  },
+  "schema_version": 1
+}

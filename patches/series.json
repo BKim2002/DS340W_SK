@@ -1,5 +1,42 @@
 {
   "schema_version": 1,
   "upstream_commit": "20e426f716ea53618657cd34bbfc4b347b98cd74",
-  "patches": []
+  "patches": [
+    {
+      "path": "patches/0001-pin-sst2-loader.patch",
+      "sha256": "31cf077bed73d9b50c9c4d33651e38a8d5db3a6bf95bc81ce53d8fe4da1e8643",
+      "classification": "data-handling",
+      "rationale": "Route SST-2 through verified external Training/Test files so non-final runs cannot load final-unseen rows.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/data_processors/tasks.py"
+      ]
+    },
+    {
+      "path": "patches/0002-guard-optional-splits.patch",
+      "sha256": "cc0d3ad6867011ac112a56f834b4d799aebbb0602fcf1150682284683a56b8ed",
+      "classification": "data-handling",
+      "rationale": "Prevent do_test=false runs from dereferencing or loading a test/final partition.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/run_seq2seq.py"
+      ]
+    },
+    {
+      "path": "patches/0003-fix-local-delta-save.patch",
+      "sha256": "7f02958a6a1e01bbe4e39e88d17ed90a375f234af58d735fc0dc9c6bef2b4276",
+      "classification": "compatibility",
+      "rationale": "Use the pinned OpenDelta local-save API and reject unsupported remote publication.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/run_seq2seq.py"
+      ]
+    },
+    {
+      "path": "patches/0004-transformers-amp-attribute.patch",
+      "sha256": "5e442b7644af39d4fa0d42ebaa5a0e100e085a0e2a797cbc92709c4e5dd63abf",
+      "classification": "compatibility",
+      "rationale": "Use the CUDA AMP state attribute exposed by the locked Transformers 4.20 trainer.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/seq2seq_trainer.py"
+      ]
+    }
+  ]
 }

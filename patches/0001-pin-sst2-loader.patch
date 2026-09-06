@@ -1,0 +1,31 @@
+diff --git a/examples/legacies/examples_seq2seq/data_processors/tasks.py b/examples/legacies/examples_seq2seq/data_processors/tasks.py
+--- a/examples/legacies/examples_seq2seq/data_processors/tasks.py
++++ b/examples/legacies/examples_seq2seq/data_processors/tasks.py
+@@ -2,6 +2,7 @@ from collections import OrderedDict
+ import collections 
+ import abc
+ import functools
++import os
+ from typing import Callable, List, Mapping
+ from examples_seq2seq.trainers.trainer_utils import pad_punctuation
+ from examples_seq2seq.metrics import metrics
+@@ -182,8 +183,17 @@ class SST2(AbstractTask):
+                            "test": "validation"}
+ 
+     def load_dataset(self, split):
+-        return datasets.load_dataset('glue', 'sst2',
+-                                     split=split, script_version="master")
++        data_files = {
++            "train": os.environ.get("DS340W_SST2_TRAIN_FILE"),
++            "validation": os.environ.get("DS340W_SST2_TEST_FILE"),
++        }
++        if not all(data_files.values()):
++            raise RuntimeError(
++                "SST2 course-data files were not provided by the execution wrapper."
++            )
++        return datasets.load_dataset('json',
++                                     data_files=data_files,
++                                     split=split)
+ 
+     def preprocessor(self, example, add_prefix=True):
+         src_texts = ["sentence:", example['sentence']]

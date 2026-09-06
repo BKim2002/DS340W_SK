@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "purpose": "Controlled LoRA-rank extension after baseline selection",
+  "fixed": {
+    "seed": 42,
+    "max_steps": 20000,
+    "eval_steps": 100,
+    "save_steps": 100,
+    "do_test": false,
+    "numeric_precision": "fp32",
+    "lora_dropout": 0.0,
+    "effective_model_dropout": 0.0,
+    "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
+    "test_indices_sha256": "83d6bdad006418cd841167d938f835561dc13b9ccd464ad21ebe7dabeb0b2394",
+    "course_data_manifest_sha256": "400143658894e4460f67d8e96dc2e69225150d1ed9ec15ec3da3cef0f37bff66"
+  },
+  "matrix": [
+    {"lora_r": 2, "lora_alpha": 4},
+    {"lora_r": 4, "lora_alpha": 8},
+    {"lora_r": 8, "lora_alpha": 16, "reuse_selected_baseline": true},
+    {"lora_r": 16, "lora_alpha": 32}
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "purpose": "Paper-guided T5-base LoRA/SST-2 baseline matrix",
+  "fixed": {
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.0,
+    "effective_model_dropout": 0.0,
+    "seed": 42,
+    "max_steps": 20000,
+    "eval_steps": 100,
+    "save_steps": 100,
+    "do_test": false,
+    "numeric_precision": "fp32",
+    "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
+    "test_indices_sha256": "83d6bdad006418cd841167d938f835561dc13b9ccd464ad21ebe7dabeb0b2394",
+    "course_data_manifest_sha256": "400143658894e4460f67d8e96dc2e69225150d1ed9ec15ec3da3cef0f37bff66"
+  },
+  "matrix": {
+    "learning_rate": [0.0001, 0.0005, 0.001],
+    "effective_batch_size": [16, 32]
+  },
+  "generator": "python -m ds340w_repro.build_matrix --verify"
+}

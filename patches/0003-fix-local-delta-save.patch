@@ -1,0 +1,25 @@
+diff --git a/examples/legacies/examples_seq2seq/run_seq2seq.py b/examples/legacies/examples_seq2seq/run_seq2seq.py
+--- a/examples/legacies/examples_seq2seq/run_seq2seq.py
++++ b/examples/legacies/examples_seq2seq/run_seq2seq.py
+@@ -488,12 +488,11 @@ def main():
+-    repo_name = create_hub_repo_name(root="DeltaHub",
+-                         dataset=data_args.task_name,
+-                         delta_type = delta_args.delta_type,
+-                         model_name_or_path= model_args.model_name_or_path)
++    if training_args.push_to_hub:
++        raise ValueError("This pinned legacy runner supports local artifact saving only.")
++
++    repo_name = os.path.join(training_args.output_dir, "delta")
+     results['repo_name'] = repo_name
+-    if training_args.push_to_hub: # TODO add description here
+-        delta_model.save_finetuned(push_to_hub=True, save_directory=repo_name, use_auth_token=True)
+-        # trainer.push_to_hub(**kwargs)
+-    else:
+-        delta_model.save_finetuned(push_to_hub=False, save_directory=repo_name, use_auth_token=True)
++    delta_model.save_finetuned(
++        finetuned_delta_path=repo_name,
++        push_to_dc=False,
++    )
+ 
+     return results
+ 

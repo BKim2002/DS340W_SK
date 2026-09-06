@@ -1,0 +1,9 @@
+*.in text eol=lf
+*.json text eol=lf
+*.lock text eol=lf
+*.patch text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.toml text eol=lf
+.gitattributes text eol=lf
+.gitmodules text eol=lf
