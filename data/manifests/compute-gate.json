@@ -1,0 +1,70 @@
+{
+  "assessment_kind": "compute-gate",
+  "decision": {
+    "reasons": [
+      "microbatch_calibration_incomplete",
+      "pilot_incomplete",
+      "approved_projection_unavailable",
+      "retained_configuration_hashes_missing"
+    ],
+    "retained_training_authorized": false,
+    "status": "STOP"
+  },
+  "evidence_cutoff_utc": "2026-09-06T17:07:52.918658+00:00",
+  "hardware": {
+    "compatibility": "WEEK1_SMOKE_ONLY",
+    "cuda_available": true,
+    "driver_version": "610.88",
+    "gpu_name": "NVIDIA GeForce RTX 4060",
+    "total_memory_mib": 8188
+  },
+  "microbatch_calibration": {
+    "attempts": [],
+    "complete": false,
+    "minimum_free_memory_mib": 512,
+    "required_batch_candidates": [
+      8,
+      4,
+      2,
+      1
+    ],
+    "selected_physical_batch_size": null
+  },
+  "pilot": {
+    "complete": false,
+    "full_test_evaluation_seconds": null,
+    "required_full_test_evaluations": 2,
+    "required_optimizer_steps": 200,
+    "seconds_per_optimizer_step": null,
+    "warmup_steps_excluded": 20
+  },
+  "projection": {
+    "actual_preflight_seconds": null,
+    "cap_gpu_hours": 48,
+    "cap_seconds": 172800,
+    "evaluations_per_run": 200,
+    "final_evaluations": 2,
+    "formula": "actual_preflight_seconds + 1.20 * (9 * (20000 * s + 200 * e) + 2 * e)",
+    "full_test_evaluation_seconds": null,
+    "optimizer_steps_per_run": 20000,
+    "projected_gpu_hours": null,
+    "projected_seconds": null,
+    "reserve_multiplier": 1.2,
+    "retained_training_runs": 9,
+    "seconds_per_optimizer_step": null,
+    "status": "UNAVAILABLE"
+  },
+  "retained_config_sha256": [],
+  "schema_version": 1,
+  "week1_smoke": {
+    "completed_at_utc": "2026-09-06T17:07:52.918658+00:00",
+    "observed_preflight_seconds_lower_bound": 23.00840692899999,
+    "optimizer_steps": 1,
+    "resolved_config_sha256": "ac4ea54d4e881b853d5133b5f4d2c6aac166d11fa4dc75eca9aa2c3f86defddd",
+    "scope": "one-step non-result viability evidence",
+    "source_manifest_sha256": "21550b3d2db459b49c3382ae0d0fe61202b388280c403147c23a5cff4d54711a",
+    "upstream_peak_memory_gb": 0.979419921875,
+    "verified": true,
+    "wall_seconds": 23.00840692899999
+  }
+}

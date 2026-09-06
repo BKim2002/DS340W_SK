@@ -1,0 +1,238 @@
+{
+  "artifact_kind": "week1-non-result-smoke",
+  "artifacts": [
+    {
+      "relative_path": "resolved-config.json",
+      "role": "resolved-config",
+      "sha256": "ac4ea54d4e881b853d5133b5f4d2c6aac166d11fa4dc75eca9aa2c3f86defddd",
+      "size_bytes": 6868
+    },
+    {
+      "relative_path": "runner-config.json",
+      "role": "original-runner-config",
+      "sha256": "69b61a67ac3c533525dc57f31fe830b2ff47a6ba91ba026af1c764ed6eb71b93",
+      "size_bytes": 2332
+    },
+    {
+      "relative_path": "execution-tree.json",
+      "role": "source-provenance",
+      "sha256": "a5e96eb635484281549061f245d1159438f2e0a7a432a5de6c5c17e71302ef8b",
+      "size_bytes": 1708
+    },
+    {
+      "relative_path": "process-result.json",
+      "role": "process-completion",
+      "sha256": "0e4e7e6de5200056d65cb9732bb3326fe8e6e1aa0178fb6522a203daa73bbccb",
+      "size_bytes": 1331
+    },
+    {
+      "relative_path": "train_results.json",
+      "role": "training-metrics",
+      "sha256": "891d5fab10ebf2a491c49e3bda8907c4dd4caaa68b824e3bcb52cb1964eed2f5",
+      "size_bytes": 187
+    },
+    {
+      "relative_path": "eval_results.json",
+      "role": "generated-evaluation-metrics",
+      "sha256": "df60ec4aca628b67c7b2b912c984d4dcba5dce533ea42f5cf024eff734bdbe2f",
+      "size_bytes": 180
+    },
+    {
+      "relative_path": "performance_results.json",
+      "role": "runtime-memory-metrics",
+      "sha256": "e540a72c1df26aa85b16282080fd6ec93f14cf7c008917c6199e7b1e7ee64ef7",
+      "size_bytes": 85
+    },
+    {
+      "relative_path": "all_results.json",
+      "role": "combined-metrics",
+      "sha256": "8a89189ed8bf0f3907ba668a034f2ded2f666f003d685dda78aa14019c295073",
+      "size_bytes": 430
+    },
+    {
+      "relative_path": "trainer_state.json",
+      "role": "final-trainer-state",
+      "sha256": "e4241bade09573624e01dda97f598be8c5cd064122ed3249d7ef607d8d10197b",
+      "size_bytes": 980
+    },
+    {
+      "relative_path": "checkpoint-1/trainer_state.json",
+      "role": "step-one-trainer-state",
+      "sha256": "7561ccf7cab388591f13a75fdf7614140a337d9fa46a4a843fbb307e737cefdf",
+      "size_bytes": 745
+    },
+    {
+      "relative_path": "checkpoint-1/optimizer.pt",
+      "role": "step-one-optimizer-state",
+      "sha256": "2c7665cc830585ea08097c707de054c338c65af6ad6ca1fbb573041858f46d16",
+      "size_bytes": 7580666
+    },
+    {
+      "relative_path": "checkpoint-1/scheduler.pt",
+      "role": "step-one-scheduler-state",
+      "sha256": "7d84cdbc59041c28dfa865cb8b45376db18e9ee961f29cb13b8516229d9f8953",
+      "size_bytes": 1064
+    },
+    {
+      "relative_path": "checkpoint-1/pytorch_model.bin",
+      "role": "step-one-trainable-weights",
+      "sha256": "deca41c8a7292410e0361ac667a21b060751b6d2403fefb266b4f40267bc93bd",
+      "size_bytes": 3800578
+    },
+    {
+      "relative_path": "pytorch_model.bin",
+      "role": "selected-trainable-weights",
+      "sha256": "deca41c8a7292410e0361ac667a21b060751b6d2403fefb266b4f40267bc93bd",
+      "size_bytes": 3800578
+    },
+    {
+      "relative_path": "delta/config.json",
+      "role": "native-delta-config",
+      "sha256": "f6cd072b33779bbdc62287149140c424b077ce654243c90b906e3d329ddbaec8",
+      "size_bytes": 565
+    },
+    {
+      "relative_path": "delta/pytorch_model.bin",
+      "role": "native-delta-weights",
+      "sha256": "2ef0b4a03875bdac253b157bb7269f4f2646543e700ca598c4dc5bcf40b9a725",
+      "size_bytes": 3838914
+    },
+    {
+      "relative_path": "reload-verification.json",
+      "role": "native-delta-reload-check",
+      "sha256": "cd6eccbdb5889fd8d75bf20775d1777fc86ff854a7d27dba25c035f8faf7ae03",
+      "size_bytes": 1770
+    }
+  ],
+  "checkpoint_reload": {
+    "checkpoint_relative_path": "delta",
+    "checkpoint_tensor_max_abs_difference": 0.0,
+    "checkpoint_tensors_match": true,
+    "loss_difference": 9.5367431640625e-07,
+    "passed": true,
+    "predictions_match": true,
+    "tolerance": 0.0001
+  },
+  "configuration": {
+    "alpha": 16,
+    "contains_unseen_fields": false,
+    "course_data_manifest_sha256": "400143658894e4460f67d8e96dc2e69225150d1ed9ec15ec3da3cef0f37bff66",
+    "do_test": false,
+    "effective_model_dropout": 0.0,
+    "experiment_id": "week1-smoke-r8",
+    "max_steps": 1,
+    "rank": 8,
+    "resolved_config_sha256": "ac4ea54d4e881b853d5133b5f4d2c6aac166d11fa4dc75eca9aa2c3f86defddd",
+    "runner_config_sha256": "69b61a67ac3c533525dc57f31fe830b2ff47a6ba91ba026af1c764ed6eb71b93",
+    "runner_payload_matches_resolved_config": true,
+    "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
+    "test_indices_sha256": "83d6bdad006418cd841167d938f835561dc13b9ccd464ad21ebe7dabeb0b2394"
+  },
+  "data_access": {
+    "contains_unseen_fields": false,
+    "course_data_binding_verified": true,
+    "do_test": false,
+    "final_unseen_access_prevented": true,
+    "final_unseen_file_exposed_to_child": false,
+    "private_root_exposed_to_child": false,
+    "visible_partitions": [
+      "Training",
+      "Test"
+    ]
+  },
+  "evaluation": {
+    "accuracy": 0.0,
+    "course_partition": "Test",
+    "evaluated_samples": 1,
+    "generation_path_exercised": true,
+    "loss": 6.005116939544678,
+    "runtime_seconds": 5.038
+  },
+  "evidence_gaps": [],
+  "inputs": {
+    "dataset": {
+      "archive_sha256": "d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa",
+      "configuration": "sst2",
+      "loader_repository": "https://github.com/huggingface/datasets.git",
+      "loader_revision": "dff6c92c80fbfac456349a531c0a4521c2b0c8f8",
+      "repository": "nyu-mll/glue",
+      "revision": "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c"
+    },
+    "model": {
+      "repository": "google/t5-base-lm-adapt",
+      "revision": "bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf"
+    }
+  },
+  "measurement": {
+    "upstream_peak_memory_gb": 0.979419921875,
+    "upstream_training_time_minutes": 0.09740615234375
+  },
+  "process": {
+    "course_data_binding": {
+      "course_data_manifest_sha256": "400143658894e4460f67d8e96dc2e69225150d1ed9ec15ec3da3cef0f37bff66",
+      "final_unseen_exposed": false,
+      "verified": true,
+      "visible_partitions": [
+        "Training",
+        "Test"
+      ]
+    },
+    "exit_code": 0,
+    "final_unseen_file_exposed_to_child": false,
+    "finished_at_utc": "2026-09-06T17:07:52.918658+00:00",
+    "model_input_binding": {
+      "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
+      "verified": true
+    },
+    "private_root_exposed_to_child": false,
+    "project_git_commit": "318cbcd57e126c41ea86141856b232aba581fe24",
+    "project_worktree_clean": true,
+    "runner_relative_path": "examples/legacies/examples_seq2seq/run_seq2seq.py",
+    "started_at_utc": "2026-09-06T17:07:32.020414+00:00",
+    "wall_seconds": 23.00840692899999
+  },
+  "schema_version": 1,
+  "scope_note": "Execution smoke only; these metrics are not a reproduction result.",
+  "status": "verified",
+  "trainable_parameters": {
+    "injected_projections": 72,
+    "layer_norm_parameters": 47616,
+    "lora_parameters": 884736,
+    "total_trainable_parameters": 932352
+  },
+  "training": {
+    "global_step": 1,
+    "train_loss": 10.914900779724121,
+    "train_runtime_seconds": 5.6747,
+    "train_samples": 1
+  },
+  "upstream": {
+    "commit": "20e426f716ea53618657cd34bbfc4b347b98cd74",
+    "patches": [
+      {
+        "classification": "data-handling",
+        "relative_path": "patches/0001-pin-sst2-loader.patch",
+        "sha256": "31cf077bed73d9b50c9c4d33651e38a8d5db3a6bf95bc81ce53d8fe4da1e8643"
+      },
+      {
+        "classification": "data-handling",
+        "relative_path": "patches/0002-guard-optional-splits.patch",
+        "sha256": "cc0d3ad6867011ac112a56f834b4d799aebbb0602fcf1150682284683a56b8ed"
+      },
+      {
+        "classification": "compatibility",
+        "relative_path": "patches/0003-fix-local-delta-save.patch",
+        "sha256": "7f02958a6a1e01bbe4e39e88d17ed90a375f234af58d735fc0dc9c6bef2b4276"
+      },
+      {
+        "classification": "compatibility",
+        "relative_path": "patches/0004-transformers-amp-attribute.patch",
+        "sha256": "5e442b7644af39d4fa0d42ebaa5a0e100e085a0e2a797cbc92709c4e5dd63abf"
+      }
+    ],
+    "post_patch_runner_sha256": "095560729ad6267341a1bb7f1ff22c5b9d63d144c69e5d88cd0e42c35ce1b580",
+    "pre_patch_runner_sha256": "64746fa2643709fe4b22a5572ed8936f1dc9fe8764c6148b8ff6ac9bda4c7a47",
+    "repository_url": "https://github.com/thunlp/OpenDelta.git",
+    "runner_relative_path": "examples/legacies/examples_seq2seq/run_seq2seq.py"
+  }
+}
