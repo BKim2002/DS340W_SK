@@ -89,6 +89,34 @@ def test_snapshot_tampering_is_rejected_immediately_before_execution(
         verify_model_snapshot_binding(config, project, cache)
 
 
+def test_hugging_face_snapshot_symlinks_may_target_the_same_model_cache(
+    tmp_path: Path,
+) -> None:
+    project, cache, snapshot, config = _fixture(tmp_path)
+    cached_file = snapshot / "config.json"
+    blob = snapshot.parents[1] / "blobs" / "config-blob"
+    blob.parent.mkdir()
+    cached_file.replace(blob)
+    cached_file.symlink_to(blob)
+
+    report = verify_model_snapshot_binding(config, project, cache)
+
+    assert report["verified"] is True
+
+
+def test_hugging_face_snapshot_symlink_cannot_escape_the_model_cache(
+    tmp_path: Path,
+) -> None:
+    project, cache, snapshot, config = _fixture(tmp_path)
+    cached_file = snapshot / "config.json"
+    escaped = tmp_path / "escaped-config.json"
+    cached_file.replace(escaped)
+    cached_file.symlink_to(escaped)
+
+    with pytest.raises(ValueError, match="Unsafe model file"):
+        verify_model_snapshot_binding(config, project, cache)
+
+
 def test_stop_gate_allows_only_the_bounded_week1_smoke(tmp_path: Path) -> None:
     gate = tmp_path / "compute-gate.json"
     gate.write_text(

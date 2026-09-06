@@ -127,9 +127,24 @@ def verify_model_snapshot_binding(
     model_lock = source_lock.get("model")
     if not isinstance(model_lock, dict):
         raise ValueError("Source lock has no model record")
-    expected_snapshot = (
-        cache_root / str(model_lock["cache_relative_path"])
-    ).resolve(strict=True)
+    cache_relative_path = Path(str(model_lock["cache_relative_path"]))
+    cache_parts = cache_relative_path.parts
+    if (
+        cache_relative_path.is_absolute()
+        or ".." in cache_parts
+        or len(cache_parts) != 4
+        or cache_parts[0] != "hub"
+        or not cache_parts[1].startswith("models--")
+        or cache_parts[2] != "snapshots"
+        or cache_parts[3] != model_lock.get("resolved_revision")
+    ):
+        raise ValueError("Unsafe model snapshot path in source lock")
+    model_cache_root = (cache_root / cache_parts[0] / cache_parts[1]).resolve(
+        strict=True
+    )
+    expected_snapshot = (cache_root / cache_relative_path).resolve(strict=True)
+    if not expected_snapshot.is_relative_to(model_cache_root):
+        raise ValueError("Unsafe model snapshot path in source lock")
     payload = resolve_runner_payload(config, project_root)
     configured_paths = {
         Path(str(payload[field])).resolve(strict=True)
@@ -144,8 +159,15 @@ def verify_model_snapshot_binding(
     if not isinstance(records, list) or not records:
         raise ValueError("Source lock model file list is empty")
     for record in records:
-        path = (expected_snapshot / str(record["relative_path"])).resolve(strict=True)
-        if not path.is_relative_to(expected_snapshot) or not path.is_file():
+        relative_path = Path(str(record["relative_path"]))
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            raise ValueError("Unsafe model file in source lock")
+        path = expected_snapshot / relative_path
+        try:
+            resolved_target = path.resolve(strict=True)
+        except FileNotFoundError as error:
+            raise ValueError("Unsafe model file in source lock") from error
+        if not path.is_file() or not resolved_target.is_relative_to(model_cache_root):
             raise ValueError("Unsafe model file in source lock")
         if path.stat().st_size != record.get("size"):
             raise ValueError(f"Model size mismatch: {path.name}")
