@@ -25,13 +25,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 def portable_path(path: Path, *, home: Path | None = None) -> str:
     """Represent a user-home path without publishing the account name."""
 
-    resolved = path.resolve()
-    resolved_home = (home or Path.home()).resolve()
-    if resolved == resolved_home:
+    absolute = Path(os.path.abspath(path.expanduser()))
+    absolute_home = Path(os.path.abspath((home or Path.home()).expanduser()))
+    if absolute == absolute_home:
         return "$HOME"
-    if resolved.is_relative_to(resolved_home):
-        return f"$HOME/{resolved.relative_to(resolved_home).as_posix()}"
-    return f"$EXTERNAL/{resolved.name}"
+    if absolute.is_relative_to(absolute_home):
+        return f"$HOME/{absolute.relative_to(absolute_home).as_posix()}"
+    return f"$EXTERNAL/{absolute.name}"
 
 
 def _run(*command: str, cwd: Path | None = None) -> str:

@@ -20,6 +20,15 @@ def test_environment_paths_are_sanitized_for_public_manifests(tmp_path: Path) ->
     assert portable_path(executable, home=home) == "$HOME/.venvs/ds340w/bin/python"
 
 
+def test_environment_path_preserves_a_venv_symlink_location(tmp_path: Path) -> None:
+    home = tmp_path / "student-home"
+    executable = home / ".venvs/ds340w/bin/python"
+    executable.parent.mkdir(parents=True)
+    executable.symlink_to(Path(sys.executable))
+
+    assert portable_path(executable, home=home) == "$HOME/.venvs/ds340w/bin/python"
+
+
 def test_bootstrap_initializes_the_pinned_author_submodule() -> None:
     bootstrap = (PROJECT_ROOT / "scripts" / "bootstrap_wsl.sh").read_text(
         encoding="utf-8"
