@@ -47,6 +47,12 @@ def _checkpoint_tensor_comparison(
     return True, float(maximum)
 
 
+def _target_max_length(tokenizer: Any) -> int:
+    """Mirror the authors' SST-2 label-length rule, including the EOS token."""
+
+    return max(len(tokenizer.encode(label)) for label in ("0", "1"))
+
+
 def _evaluate_reloaded_checkpoint(
     *, artifact_root: Path, values: dict[str, Any]
 ) -> tuple[str, str, str, float]:
@@ -113,7 +119,7 @@ def _evaluate_reloaded_checkpoint(
     with tokenizer.as_target_tokenizer():
         labels = tokenizer(
             target,
-            max_length=2,
+            max_length=_target_max_length(tokenizer),
             padding=False,
             truncation=True,
             return_tensors="pt",
