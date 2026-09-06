@@ -1,0 +1,151 @@
+{
+  "dependency_lock": {
+    "matches_installed": true,
+    "package_count": 81,
+    "path": "requirements.lock",
+    "sha256": "e7cac0474424b964750180b23fc8320d23d8c2ff0d82e6e7eaa4e0ef286f8160"
+  },
+  "determinism": {
+    "algorithms_enabled": true,
+    "bf16_reduced_precision_reduction": false,
+    "capability_check_passed": true,
+    "cublas_workspace_config": ":4096:8",
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "fp16_reduced_precision_reduction": false,
+    "tf32_cudnn": false,
+    "tf32_matmul": false
+  },
+  "generated_at_utc": "2026-09-06T17:00:11.144207+00:00",
+  "git": {
+    "client_version": "git version 2.34.1",
+    "opendelta": {
+      "commit": "20e426f716ea53618657cd34bbfc4b347b98cd74",
+      "remote_url": "https://github.com/thunlp/OpenDelta.git",
+      "worktree_clean": true
+    },
+    "project": {
+      "commit": "4261e21d457e787c2069244cd12308e27fba3243",
+      "remote_url": "https://github.com/BKim2002/DS340W_SK.git"
+    }
+  },
+  "nvidia": {
+    "devices": [
+      {
+        "compute_capability": "8.9",
+        "index": 0,
+        "memory_total_mib": 8188,
+        "name": "NVIDIA GeForce RTX 4060"
+      }
+    ],
+    "driver_version": "610.88"
+  },
+  "operating_system": {
+    "id": "ubuntu",
+    "is_wsl": true,
+    "kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "pretty_name": "Ubuntu 22.04.5 LTS"
+  },
+  "packages": {
+    "aiohappyeyeballs": "2.7.1",
+    "aiohttp": "3.14.3",
+    "aiosignal": "1.4.0",
+    "aliyun-python-sdk-core": "2.16.1",
+    "aliyun-python-sdk-kms": "2.16.5",
+    "async-timeout": "5.0.1",
+    "attrs": "26.1.0",
+    "bigmodelvis": "0.0.1",
+    "certifi": "2026.7.22",
+    "cffi": "2.1.1",
+    "charset-normalizer": "3.5.1",
+    "cheroot": "11.1.2",
+    "cloudpickle": "3.1.2",
+    "crcmod": "1.7",
+    "cryptography": "50.0.1",
+    "datasets": "1.17.0",
+    "decorator": "5.1.1",
+    "delta-center-client": "0.0.4",
+    "dill": "0.4.1",
+    "ds340w-repro": "0.1.0",
+    "exceptiongroup": "1.3.1",
+    "filelock": "3.32.3",
+    "frozenlist": "1.8.0",
+    "fsspec": "2022.1.0",
+    "gitdb": "4.0.12",
+    "gitpython": "3.1.45",
+    "huggingface-hub": "0.10.1",
+    "idna": "3.19",
+    "iniconfig": "2.3.0",
+    "jaraco-functools": "4.6.0",
+    "jinja2": "3.1.6",
+    "jmespath": "1.1.0",
+    "joblib": "1.6.0",
+    "markdown-it-py": "4.2.0",
+    "markupsafe": "3.0.3",
+    "mdurl": "0.1.2",
+    "more-itertools": "11.1.0",
+    "mpmath": "1.3.0",
+    "multidict": "6.7.1",
+    "multiprocess": "0.70.19",
+    "networkx": "3.4.2",
+    "numpy": "1.23.5",
+    "oss2": "2.15.0",
+    "packaging": "26.3",
+    "pandas": "2.3.3",
+    "pip": "22.0.2",
+    "pluggy": "1.6.0",
+    "propcache": "0.5.2",
+    "protobuf": "3.20.3",
+    "pyarrow": "7.0.0",
+    "pycparser": "3.0",
+    "pycryptodome": "3.23.0",
+    "pygments": "2.21.0",
+    "pytest": "9.1.1",
+    "python-dateutil": "2.9.0.post0",
+    "pytz": "2026.3.post1",
+    "pyyaml": "6.0.3",
+    "regex": "2026.9.3",
+    "requests": "2.34.2",
+    "rich": "15.0.0",
+    "scikit-learn": "1.1.3",
+    "scipy": "1.9.3",
+    "sentencepiece": "0.1.99",
+    "setuptools": "59.6.0",
+    "six": "1.17.0",
+    "smmap": "5.0.3",
+    "sympy": "1.14.0",
+    "tensorboardx": "2.6.2.2",
+    "threadpoolctl": "3.6.0",
+    "tokenizers": "0.12.1",
+    "tomli": "2.4.1",
+    "torch": "2.1.2+cu121",
+    "tqdm": "4.70.0",
+    "transformers": "4.20.1",
+    "triton": "2.1.0",
+    "typing-extensions": "4.16.0",
+    "tzdata": "2026.3",
+    "urllib3": "2.7.0",
+    "web-py": "0.62",
+    "xxhash": "4.0.1",
+    "yacs": "0.1.8",
+    "yarl": "1.24.5"
+  },
+  "precision_policy": {
+    "bf16": false,
+    "fp16": false,
+    "tf32": false,
+    "torch_dtype": "float32"
+  },
+  "python": {
+    "executable": "$HOME/.venvs/ds340w/bin/python",
+    "implementation": "CPython",
+    "version": "3.10.12"
+  },
+  "pytorch": {
+    "cuda_available": true,
+    "cuda_runtime": "12.1",
+    "cudnn_version": 8902,
+    "version": "2.1.2+cu121"
+  },
+  "schema_version": 1
+}
