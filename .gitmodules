@@ -1,0 +1,3 @@
+[submodule "vendor/OpenDelta"]
+	path = vendor/OpenDelta
+	url = https://github.com/thunlp/OpenDelta.git

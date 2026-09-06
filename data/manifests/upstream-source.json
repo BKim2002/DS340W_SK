@@ -1,0 +1,7 @@
+{
+  "commit": "20e426f716ea53618657cd34bbfc4b347b98cd74",
+  "is_clean": true,
+  "remote_url": "https://github.com/thunlp/OpenDelta.git",
+  "runner_relative_path": "examples/legacies/examples_seq2seq/run_seq2seq.py",
+  "runner_sha256": "64746fa2643709fe4b22a5572ed8936f1dc9fe8764c6148b8ff6ac9bda4c7a47"
+}
