@@ -430,12 +430,22 @@ def test_checked_environment_and_smoke_manifests_load_as_week1_evidence() -> Non
         smoke_manifest_path,
     )
 
-    assert hardware == _hardware()
+    environment_path = PROJECT_ROOT / "data" / "manifests" / "environment-lock.json"
+    checked_environment = json.loads(environment_path.read_text(encoding="utf-8"))
+    assert hardware.gpu_name == "NVIDIA GeForce RTX 4060"
+    assert hardware.total_memory_mib == 8_188
+    assert hardware.driver_version == "616.92"
+    assert hardware.cuda_available is True
+    assert hardware.probe_wall_seconds == checked_environment["probe_wall_seconds"]
+    assert hardware.source_manifest_sha256 == sha256(
+        environment_path.read_bytes()
+    ).hexdigest()
     assert smoke.verified is True
     assert checked_smoke["status"] == "verified"
     assert smoke.source_manifest_sha256 == sha256(
         smoke_manifest_path.read_bytes()
     ).hexdigest()
+    assert smoke.environment_lock_sha256 == hardware.source_manifest_sha256
     assert smoke.resolved_config_sha256 == checked_smoke["configuration"][
         "resolved_config_sha256"
     ]

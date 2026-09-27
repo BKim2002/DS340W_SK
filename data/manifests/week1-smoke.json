@@ -4,62 +4,62 @@
     {
       "relative_path": "resolved-config.json",
       "role": "resolved-config",
-      "sha256": "ac4ea54d4e881b853d5133b5f4d2c6aac166d11fa4dc75eca9aa2c3f86defddd",
-      "size_bytes": 6868
+      "sha256": "dcea78a46ff67b650a850d9acf40a1aa135ad55b89a62161d6415797bcb5cff4",
+      "size_bytes": 6954
     },
     {
       "relative_path": "runner-config.json",
       "role": "original-runner-config",
-      "sha256": "69b61a67ac3c533525dc57f31fe830b2ff47a6ba91ba026af1c764ed6eb71b93",
-      "size_bytes": 2332
+      "sha256": "e6358516c76072a3ff9af00c1158d0f48bcfb9300ef162b4051c6607601ffb41",
+      "size_bytes": 2355
     },
     {
       "relative_path": "execution-tree.json",
       "role": "source-provenance",
-      "sha256": "a5e96eb635484281549061f245d1159438f2e0a7a432a5de6c5c17e71302ef8b",
-      "size_bytes": 1708
+      "sha256": "7f117da8441771bc0da4002da5ff2a4f7744905c90c1205096be76ac12cc8791",
+      "size_bytes": 1692
     },
     {
       "relative_path": "process-result.json",
       "role": "process-completion",
-      "sha256": "0e4e7e6de5200056d65cb9732bb3326fe8e6e1aa0178fb6522a203daa73bbccb",
-      "size_bytes": 1331
+      "sha256": "73eca43ac3417f15759673bf9a58b81dee243696eb01c9e1c463725fe960f896",
+      "size_bytes": 1326
     },
     {
       "relative_path": "train_results.json",
       "role": "training-metrics",
-      "sha256": "891d5fab10ebf2a491c49e3bda8907c4dd4caaa68b824e3bcb52cb1964eed2f5",
+      "sha256": "2eeee6c9928b97b7dd9eb6f7190d68b7893877b45e791ace796445d8d21b3967",
       "size_bytes": 187
     },
     {
       "relative_path": "eval_results.json",
       "role": "generated-evaluation-metrics",
-      "sha256": "df60ec4aca628b67c7b2b912c984d4dcba5dce533ea42f5cf024eff734bdbe2f",
-      "size_bytes": 180
+      "sha256": "309fd3a0a5e9b0e1f0f461ca216e35b67bee912b30501590b58dae8ec610d2d8",
+      "size_bytes": 181
     },
     {
       "relative_path": "performance_results.json",
       "role": "runtime-memory-metrics",
-      "sha256": "e540a72c1df26aa85b16282080fd6ec93f14cf7c008917c6199e7b1e7ee64ef7",
-      "size_bytes": 85
+      "sha256": "18800182ef2e930a09ba8702bcaa6e928f1cb50f8c8345c7646ef6f4e28ec00f",
+      "size_bytes": 88
     },
     {
       "relative_path": "all_results.json",
       "role": "combined-metrics",
-      "sha256": "8a89189ed8bf0f3907ba668a034f2ded2f666f003d685dda78aa14019c295073",
-      "size_bytes": 430
+      "sha256": "2a7e91c7b746c3f75f068902e4c63a1b61f50c0df0623d8e81df6bc143b87a68",
+      "size_bytes": 434
     },
     {
       "relative_path": "trainer_state.json",
       "role": "final-trainer-state",
-      "sha256": "e4241bade09573624e01dda97f598be8c5cd064122ed3249d7ef607d8d10197b",
-      "size_bytes": 980
+      "sha256": "65b64adb4074aeca04c0488abbf120d076b6ca95645f42af853b8e311b59c027",
+      "size_bytes": 976
     },
     {
       "relative_path": "checkpoint-1/trainer_state.json",
       "role": "step-one-trainer-state",
-      "sha256": "7561ccf7cab388591f13a75fdf7614140a337d9fa46a4a843fbb307e737cefdf",
-      "size_bytes": 745
+      "sha256": "f7541e61631a80ec0f52d398128babfd82d9137520bce0e61c11a70d08a56d40",
+      "size_bytes": 741
     },
     {
       "relative_path": "checkpoint-1/optimizer.pt",
@@ -100,7 +100,7 @@
     {
       "relative_path": "reload-verification.json",
       "role": "native-delta-reload-check",
-      "sha256": "cd6eccbdb5889fd8d75bf20775d1777fc86ff854a7d27dba25c035f8faf7ae03",
+      "sha256": "b161953e6a4906811340cd84bdc22fd0632f5f2e477b31e0f4939d7c188075d8",
       "size_bytes": 1770
     }
   ],
@@ -122,8 +122,8 @@
     "experiment_id": "week1-smoke-r8",
     "max_steps": 1,
     "rank": 8,
-    "resolved_config_sha256": "ac4ea54d4e881b853d5133b5f4d2c6aac166d11fa4dc75eca9aa2c3f86defddd",
-    "runner_config_sha256": "69b61a67ac3c533525dc57f31fe830b2ff47a6ba91ba026af1c764ed6eb71b93",
+    "resolved_config_sha256": "dcea78a46ff67b650a850d9acf40a1aa135ad55b89a62161d6415797bcb5cff4",
+    "runner_config_sha256": "e6358516c76072a3ff9af00c1158d0f48bcfb9300ef162b4051c6607601ffb41",
     "runner_payload_matches_resolved_config": true,
     "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
     "test_indices_sha256": "83d6bdad006418cd841167d938f835561dc13b9ccd464ad21ebe7dabeb0b2394"
@@ -140,13 +140,14 @@
       "Test"
     ]
   },
+  "environment_lock_sha256": "6dee7a18ad3e8d721b9e3c454a606d8a21d93e6917ffe79523f2c5a69eb1ce14",
   "evaluation": {
     "accuracy": 0.0,
     "course_partition": "Test",
     "evaluated_samples": 1,
     "generation_path_exercised": true,
     "loss": 6.005116939544678,
-    "runtime_seconds": 5.038
+    "runtime_seconds": 4.6332
   },
   "evidence_gaps": [],
   "inputs": {
@@ -165,7 +166,7 @@
   },
   "measurement": {
     "upstream_peak_memory_gb": 0.979419921875,
-    "upstream_training_time_minutes": 0.09740615234375
+    "upstream_training_time_minutes": 0.09373082682291667
   },
   "process": {
     "course_data_binding": {
@@ -179,17 +180,17 @@
     },
     "exit_code": 0,
     "final_unseen_file_exposed_to_child": false,
-    "finished_at_utc": "2026-09-06T17:07:52.918658+00:00",
+    "finished_at_utc": "2026-09-27T01:28:32.606164+00:00",
     "model_input_binding": {
       "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
       "verified": true
     },
     "private_root_exposed_to_child": false,
-    "project_git_commit": "318cbcd57e126c41ea86141856b232aba581fe24",
+    "project_git_commit": "8b9d76bce51c0bb7293514e2e9a6d83482cdb295",
     "project_worktree_clean": true,
     "runner_relative_path": "examples/legacies/examples_seq2seq/run_seq2seq.py",
-    "started_at_utc": "2026-09-06T17:07:32.020414+00:00",
-    "wall_seconds": 23.00840692899999
+    "started_at_utc": "2026-09-27T01:28:14.605352+00:00",
+    "wall_seconds": 18.000850711
   },
   "schema_version": 1,
   "scope_note": "Execution smoke only; these metrics are not a reproduction result.",
@@ -203,7 +204,7 @@
   "training": {
     "global_step": 1,
     "train_loss": 10.914900779724121,
-    "train_runtime_seconds": 5.6747,
+    "train_runtime_seconds": 5.3305,
     "train_samples": 1
   },
   "upstream": {
@@ -228,9 +229,14 @@
         "classification": "compatibility",
         "relative_path": "patches/0004-transformers-amp-attribute.patch",
         "sha256": "5e442b7644af39d4fa0d42ebaa5a0e100e085a0e2a797cbc92709c4e5dd63abf"
+      },
+      {
+        "classification": "observation-only",
+        "relative_path": "patches/0005-record-preflight-timing.patch",
+        "sha256": "fdb3f2f1fe8529192aad4fcd733225bfe92fe76caca7c2bb58cebce27e75506d"
       }
     ],
-    "post_patch_runner_sha256": "095560729ad6267341a1bb7f1ff22c5b9d63d144c69e5d88cd0e42c35ce1b580",
+    "post_patch_runner_sha256": "5803791b0031517171e7a9ecbcf76433ceb64f96995d91d67a60ef57d8219192",
     "pre_patch_runner_sha256": "64746fa2643709fe4b22a5572ed8936f1dc9fe8764c6148b8ff6ac9bda4c7a47",
     "repository_url": "https://github.com/thunlp/OpenDelta.git",
     "runner_relative_path": "examples/legacies/examples_seq2seq/run_seq2seq.py"
