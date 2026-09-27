@@ -1,20 +1,48 @@
 {
   "assessment_kind": "compute-gate",
+  "authorization": {
+    "baseline": {
+      "authorized": false,
+      "config_sha256": [],
+      "expected_config_count": 6
+    },
+    "rank": {
+      "authorized": false,
+      "config_sha256": [],
+      "expected_config_count": 3,
+      "requires_stage": "baseline"
+    }
+  },
   "decision": {
     "reasons": [
+      "evaluation_batch_calibration_incomplete",
       "microbatch_calibration_incomplete",
       "pilot_incomplete",
       "approved_projection_unavailable",
-      "retained_configuration_hashes_missing"
+      "baseline_configuration_hashes_missing"
     ],
     "retained_training_authorized": false,
     "status": "STOP"
+  },
+  "evaluation_batch_calibration": {
+    "attempts": [],
+    "complete": false,
+    "minimum_free_memory_mib": 512,
+    "required_batch_candidates": [
+      32,
+      16,
+      8,
+      4,
+      2,
+      1
+    ],
+    "selected_evaluation_batch_size": null
   },
   "evidence_cutoff_utc": "2026-09-06T17:07:52.918658+00:00",
   "hardware": {
     "compatibility": "WEEK1_SMOKE_ONLY",
     "cuda_available": true,
-    "driver_version": "610.88",
+    "driver_version": "616.92",
     "gpu_name": "NVIDIA GeForce RTX 4060",
     "total_memory_mib": 8188
   },
@@ -42,20 +70,35 @@
     "actual_preflight_seconds": null,
     "cap_gpu_hours": 48,
     "cap_seconds": 172800,
-    "evaluations_per_run": 200,
     "final_evaluations": 2,
-    "formula": "actual_preflight_seconds + 1.20 * (9 * (20000 * s + 200 * e) + 2 * e)",
+    "formula": "actual_preflight_seconds + 1.20 * (sum(stage_runs * (stage_steps * s + stage_evaluations * e)) + final_evaluations * e)",
     "full_test_evaluation_seconds": null,
-    "optimizer_steps_per_run": 20000,
     "projected_gpu_hours": null,
     "projected_seconds": null,
     "reserve_multiplier": 1.2,
+    "retained_run_plan": {
+      "final_evaluations": 2,
+      "stages": [
+        {
+          "evaluations_per_run": 200,
+          "name": "baseline",
+          "optimizer_steps_per_run": 20000,
+          "training_runs": 6
+        },
+        {
+          "evaluations_per_run": 200,
+          "name": "rank",
+          "optimizer_steps_per_run": 20000,
+          "training_runs": 3
+        }
+      ],
+      "training_runs": 9
+    },
     "retained_training_runs": 9,
     "seconds_per_optimizer_step": null,
     "status": "UNAVAILABLE"
   },
-  "retained_config_sha256": [],
-  "schema_version": 1,
+  "schema_version": 2,
   "week1_smoke": {
     "completed_at_utc": "2026-09-06T17:07:52.918658+00:00",
     "observed_preflight_seconds_lower_bound": 23.00840692899999,

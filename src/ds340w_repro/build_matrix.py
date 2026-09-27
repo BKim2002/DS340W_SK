@@ -282,6 +282,105 @@ def build_smoke_config(
     ).with_value("max_val_samples", 1, ACCOMMODATION)
 
 
+def _with_accommodations(
+    config: ResolvedConfig, values: dict[str, Any]
+) -> ResolvedConfig:
+    for key, value in values.items():
+        config = config.with_value(key, value, ACCOMMODATION)
+    validate_nonfinal_config(config)
+    return config
+
+
+def build_evaluation_calibration_config(
+    model_path: Path,
+    output_dir: Path,
+    evaluation_batch_size: int,
+) -> ResolvedConfig:
+    """Build one full-Test, evaluation-only preflight configuration."""
+
+    config = _resolved(
+        f"preflight-eval-eb{evaluation_batch_size}",
+        model_path=model_path,
+        output_dir=output_dir,
+        physical_batch_size=1,
+        evaluation_batch_size=evaluation_batch_size,
+        effective_batch_size=1,
+        learning_rate=1e-3,
+        rank=16,
+        max_steps=1,
+        eval_steps=1,
+        save_steps=1,
+        max_train_samples=1,
+        max_val_samples=436,
+    )
+    return _with_accommodations(
+        config,
+        {
+            "do_train": False,
+            "evaluation_strategy": "no",
+            "save_strategy": "no",
+            "load_best_model_at_end": False,
+        },
+    )
+
+
+def build_training_calibration_config(
+    model_path: Path,
+    output_dir: Path,
+    physical_batch_size: int,
+    evaluation_batch_size: int,
+) -> ResolvedConfig:
+    """Build one ten-step worst-case LoRA training calibration."""
+
+    config = _resolved(
+        f"preflight-train-pb{physical_batch_size}-eb{evaluation_batch_size}",
+        model_path=model_path,
+        output_dir=output_dir,
+        physical_batch_size=physical_batch_size,
+        evaluation_batch_size=evaluation_batch_size,
+        effective_batch_size=32,
+        learning_rate=1e-3,
+        rank=16,
+        max_steps=10,
+        eval_steps=10,
+        save_steps=10,
+        max_val_samples=436,
+    )
+    return _with_accommodations(
+        config,
+        {
+            "do_eval": False,
+            "evaluation_strategy": "no",
+            "save_strategy": "no",
+            "load_best_model_at_end": False,
+        },
+    )
+
+
+def build_pilot_config(
+    model_path: Path,
+    output_dir: Path,
+    physical_batch_size: int,
+    evaluation_batch_size: int,
+) -> ResolvedConfig:
+    """Build the discarded 200-step rank-16 timing pilot."""
+
+    return _resolved(
+        f"preflight-pilot-r16-pb{physical_batch_size}-eb{evaluation_batch_size}",
+        model_path=model_path,
+        output_dir=output_dir,
+        physical_batch_size=physical_batch_size,
+        evaluation_batch_size=evaluation_batch_size,
+        effective_batch_size=32,
+        learning_rate=1e-3,
+        rank=16,
+        max_steps=200,
+        eval_steps=100,
+        save_steps=100,
+        max_val_samples=436,
+    )
+
+
 def _main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify", action="store_true")

@@ -7,10 +7,18 @@ import subprocess
 
 import pytest
 
-from ds340w_repro.build_matrix import build_baseline_matrix, build_smoke_config
+from ds340w_repro.build_matrix import (
+    build_baseline_matrix,
+    build_evaluation_calibration_config,
+    build_pilot_config,
+    build_rank_matrix,
+    build_smoke_config,
+    build_training_calibration_config,
+)
 from ds340w_repro.data.create_sst2_split import create_course_split
 from ds340w_repro.data.materialize_sst2 import materialize_course_data
 from ds340w_repro.preflight import ComputeGateError
+from ds340w_repro.config_schema import ResolvedConfig
 from ds340w_repro.run_opendelta import (
     enforce_compute_gate,
     verify_project_git_binding,
@@ -138,12 +146,64 @@ def test_stop_gate_allows_only_the_bounded_week1_smoke(tmp_path: Path) -> None:
     )[0]
     smoke_path = tmp_path / "smoke.json"
     baseline_path = tmp_path / "baseline.json"
+    rank = build_rank_matrix(
+        Path("model"), Path("runs"), 1, 1, 1e-3, 32, Path("rank8")
+    )[0]
+    rank_path = tmp_path / "rank.json"
+    final = ResolvedConfig(
+        experiment_id="final-eval",
+        values=smoke.values,
+        authority_by_field=smoke.authority_by_field,
+    )
+    final_path = tmp_path / "final.json"
     smoke.write(smoke_path)
     baseline.write(baseline_path)
+    rank.write(rank_path)
+    final.write(final_path)
 
     assert enforce_compute_gate(smoke, gate, smoke_path) is None
     with pytest.raises(ComputeGateError, match="STOP"):
         enforce_compute_gate(baseline, gate, baseline_path)
+    with pytest.raises(ComputeGateError, match="STOP"):
+        enforce_compute_gate(rank, gate, rank_path)
+    with pytest.raises(ComputeGateError, match="Unsupported experiment"):
+        enforce_compute_gate(final, gate, final_path)
+
+
+def test_stop_gate_allows_only_exact_validated_preflight_shapes(
+    tmp_path: Path,
+) -> None:
+    gate = tmp_path / "compute-gate.json"
+    gate.write_text(
+        json.dumps(
+            {
+                "schema_version": 2,
+                "decision": {
+                    "status": "STOP",
+                    "retained_training_authorized": False,
+                    "reasons": ["pilot_incomplete"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    model = Path("model")
+    configs = (
+        build_evaluation_calibration_config(model, Path("eval"), 16),
+        build_training_calibration_config(model, Path("train"), 4, 16),
+        build_pilot_config(model, Path("pilot"), 4, 16),
+    )
+
+    for index, config in enumerate(configs):
+        path = tmp_path / f"preflight-{index}.json"
+        config.write(path)
+        assert enforce_compute_gate(config, gate, path) is None
+
+    invalid = configs[-1].with_value("max_steps", 201, "tampered fixture")
+    invalid_path = tmp_path / "invalid-pilot.json"
+    invalid.write(invalid_path)
+    with pytest.raises(ComputeGateError, match="Unsupported experiment"):
+        enforce_compute_gate(invalid, gate, invalid_path)
 
 
 def test_runtime_sees_only_hash_bound_training_and_test_files(tmp_path: Path) -> None:

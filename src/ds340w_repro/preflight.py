@@ -11,18 +11,85 @@ import re
 from typing import Any, Mapping, Sequence
 
 
-RETAINED_TRAINING_RUNS = 9
 OPTIMIZER_STEPS_PER_RUN = 20_000
 EVALUATIONS_PER_RUN = 200
 FINAL_EVALUATIONS = 2
 RESERVE_MULTIPLIER = 1.20
 GPU_TIME_CAP_SECONDS = 48 * 60 * 60
 MINIMUM_FREE_MEMORY_MIB = 512
+EVALUATION_BATCH_CANDIDATES = (32, 16, 8, 4, 2, 1)
 CALIBRATION_BATCH_CANDIDATES = (8, 4, 2, 1)
 
 
 class ComputeGateError(RuntimeError):
     """Raised when retained training is not backed by a valid PASS manifest."""
+
+
+@dataclass(frozen=True)
+class RetainedRunStage:
+    """One homogeneous group of retained training runs in the compute budget."""
+
+    name: str
+    training_runs: int
+    optimizer_steps_per_run: int = OPTIMIZER_STEPS_PER_RUN
+    evaluations_per_run: int = EVALUATIONS_PER_RUN
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("Retained run-stage name must be non-empty")
+        for field_name in (
+            "training_runs",
+            "optimizer_steps_per_run",
+            "evaluations_per_run",
+        ):
+            value = getattr(self, field_name)
+            if type(value) is not int or value < 0:
+                raise ValueError(f"{field_name} must be a non-negative integer")
+
+    def to_dict(self) -> dict[str, int | str]:
+        return {
+            "name": self.name,
+            "training_runs": self.training_runs,
+            "optimizer_steps_per_run": self.optimizer_steps_per_run,
+            "evaluations_per_run": self.evaluations_per_run,
+        }
+
+
+@dataclass(frozen=True)
+class RetainedRunPlan:
+    """Explicit retained work used by the conservative GPU-time projection."""
+
+    stages: tuple[RetainedRunStage, ...]
+    final_evaluations: int
+
+    def __post_init__(self) -> None:
+        if not self.stages:
+            raise ValueError("Retained run plan must contain at least one stage")
+        names = tuple(stage.name for stage in self.stages)
+        if len(set(names)) != len(names):
+            raise ValueError("Retained run-stage names must be unique")
+        if type(self.final_evaluations) is not int or self.final_evaluations < 0:
+            raise ValueError("Final evaluation count must be a non-negative integer")
+
+    @property
+    def training_runs(self) -> int:
+        return sum(stage.training_runs for stage in self.stages)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "stages": [stage.to_dict() for stage in self.stages],
+            "training_runs": self.training_runs,
+            "final_evaluations": self.final_evaluations,
+        }
+
+
+DEFAULT_RETAINED_RUN_PLAN = RetainedRunPlan(
+    stages=(
+        RetainedRunStage("baseline", training_runs=6),
+        RetainedRunStage("rank", training_runs=3),
+    ),
+    final_evaluations=FINAL_EVALUATIONS,
+)
 
 
 def _valid_sha256(value: str) -> bool:
@@ -32,6 +99,92 @@ def _valid_sha256(value: str) -> bool:
 def _require_finite_nonnegative(value: float, name: str) -> None:
     if not math.isfinite(value) or value < 0:
         raise ValueError(f"{name} must be a finite non-negative number")
+
+
+def validated_preflight_phase(config: Any) -> str | None:
+    """Return the phase only for an exact, bounded preflight configuration."""
+
+    values = config.values
+    common = {
+        "do_test": False,
+        "max_val_samples": 436,
+        "lora_r": 16,
+        "lora_alpha": 32,
+        "learning_rate": 1e-3,
+        "fp16": False,
+        "bf16": False,
+        "tf32": False,
+    }
+
+    evaluation_batch_size = values.get("per_device_eval_batch_size")
+    if evaluation_batch_size in EVALUATION_BATCH_CANDIDATES:
+        evaluation = {
+            **common,
+            "do_train": False,
+            "do_eval": True,
+            "max_steps": 1,
+            "max_train_samples": 1,
+            "per_device_train_batch_size": 1,
+            "effective_batch_size": 1,
+            "gradient_accumulation_steps": 1,
+            "evaluation_strategy": "no",
+            "save_strategy": "no",
+            "load_best_model_at_end": False,
+        }
+        if (
+            config.experiment_id == f"preflight-eval-eb{evaluation_batch_size}"
+            and all(values.get(key) == value for key, value in evaluation.items())
+        ):
+            return "evaluation_batch_calibration"
+
+    physical_batch_size = values.get("per_device_train_batch_size")
+    if (
+        physical_batch_size in CALIBRATION_BATCH_CANDIDATES
+        and evaluation_batch_size in EVALUATION_BATCH_CANDIDATES
+    ):
+        training = {
+            **common,
+            "do_train": True,
+            "do_eval": False,
+            "max_steps": 10,
+            "per_device_train_batch_size": physical_batch_size,
+            "effective_batch_size": 32,
+            "gradient_accumulation_steps": 32 // physical_batch_size,
+            "evaluation_strategy": "no",
+            "save_strategy": "no",
+            "load_best_model_at_end": False,
+        }
+        if (
+            config.experiment_id
+            == f"preflight-train-pb{physical_batch_size}-eb{evaluation_batch_size}"
+            and all(values.get(key) == value for key, value in training.items())
+        ):
+            return "microbatch_calibration"
+
+        pilot = {
+            **common,
+            "do_train": True,
+            "do_eval": True,
+            "max_steps": 200,
+            "per_device_train_batch_size": physical_batch_size,
+            "effective_batch_size": 32,
+            "gradient_accumulation_steps": 32 // physical_batch_size,
+            "evaluation_strategy": "steps",
+            "save_strategy": "steps",
+            "eval_steps": 100,
+            "save_steps": 100,
+            "load_best_model_at_end": True,
+        }
+        if (
+            config.experiment_id
+            == (
+                f"preflight-pilot-r16-pb{physical_batch_size}-"
+                f"eb{evaluation_batch_size}"
+            )
+            and all(values.get(key) == value for key, value in pilot.items())
+        ):
+            return "pilot"
+    return None
 
 
 @dataclass(frozen=True)
@@ -102,6 +255,67 @@ class Week1SmokeEvidence:
             and self.final_unseen_access_prevented
             and self.checkpoint_reload_passed
         )
+
+
+@dataclass(frozen=True)
+class EvaluationBatchAttempt:
+    """One fresh-process, full-Test evaluation-batch calibration attempt."""
+
+    evaluation_batch_size: int
+    config_sha256: str
+    started_at_utc: str
+    finished_at_utc: str
+    fresh_process: bool
+    evaluated_samples: int
+    exit_status: int
+    oom: bool
+    minimum_free_memory_mib: float
+
+    def __post_init__(self) -> None:
+        if self.evaluation_batch_size not in EVALUATION_BATCH_CANDIDATES:
+            raise ValueError(
+                "Evaluation batch is not in the approved candidate order"
+            )
+        if not _valid_sha256(self.config_sha256):
+            raise ValueError(
+                "Evaluation calibration config checksum must be a lowercase SHA-256"
+            )
+        if not self.started_at_utc or not self.finished_at_utc:
+            raise ValueError("Evaluation calibration timestamps must be non-empty")
+        if type(self.fresh_process) is not bool or type(self.oom) is not bool:
+            raise TypeError("Evaluation process and OOM flags must be boolean")
+        if type(self.evaluated_samples) is not int or self.evaluated_samples < 0:
+            raise ValueError("Evaluated sample count must be a non-negative integer")
+        if type(self.exit_status) is not int:
+            raise TypeError("Evaluation exit status must be an integer")
+        _require_finite_nonnegative(
+            self.minimum_free_memory_mib,
+            "Evaluation calibration minimum free memory MiB",
+        )
+
+    @property
+    def passed(self) -> bool:
+        return (
+            self.fresh_process
+            and self.evaluated_samples == 436
+            and self.exit_status == 0
+            and not self.oom
+            and self.minimum_free_memory_mib >= MINIMUM_FREE_MEMORY_MIB
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "config_sha256": self.config_sha256,
+            "evaluated_samples": self.evaluated_samples,
+            "evaluation_batch_size": self.evaluation_batch_size,
+            "exit_status": self.exit_status,
+            "finished_at_utc": self.finished_at_utc,
+            "fresh_process": self.fresh_process,
+            "minimum_free_memory_mib": self.minimum_free_memory_mib,
+            "oom": self.oom,
+            "passed": self.passed,
+            "started_at_utc": self.started_at_utc,
+        }
 
 
 @dataclass(frozen=True)
@@ -199,6 +413,7 @@ class PilotEvidence:
     full_test_evaluation_seconds: tuple[float, float]
     do_test: bool
     exit_status: int
+    evaluation_batch_size: int
 
     def __post_init__(self) -> None:
         if not _valid_sha256(self.config_sha256):
@@ -215,6 +430,7 @@ class PilotEvidence:
             "optimizer_steps",
             "warmup_steps_excluded",
             "exit_status",
+            "evaluation_batch_size",
         ):
             if type(getattr(self, name)) is not int:
                 raise TypeError(f"{name} must be an integer")
@@ -228,17 +444,24 @@ class PilotEvidence:
         for value in self.full_test_evaluation_seconds:
             _require_finite_nonnegative(value, "Pilot Test evaluation seconds")
 
-    def complete_for(self, selected_physical_batch_size: int | None) -> bool:
+    def complete_for(
+        self,
+        selected_physical_batch_size: int | None,
+        selected_evaluation_batch_size: int | None,
+    ) -> bool:
         return (
             selected_physical_batch_size is not None
             and self.fresh_process
             and self.physical_batch_size == selected_physical_batch_size
+            and self.evaluation_batch_size == selected_evaluation_batch_size
             and self.rank == 16
             and self.lora_alpha == 32
             and self.effective_batch_size == 32
             and self.learning_rate == 1e-3
             and self.optimizer_steps == 200
             and self.warmup_steps_excluded == 20
+            and self.non_evaluation_seconds_steps_21_to_200 > 0
+            and all(value > 0 for value in self.full_test_evaluation_seconds)
             and not self.do_test
             and self.exit_status == 0
         )
@@ -257,6 +480,7 @@ class PilotEvidence:
             "config_sha256": self.config_sha256,
             "do_test": self.do_test,
             "effective_batch_size": self.effective_batch_size,
+            "evaluation_batch_size": self.evaluation_batch_size,
             "evaluation_measurements_seconds": list(
                 self.full_test_evaluation_seconds
             ),
@@ -285,6 +509,7 @@ def project_gpu_seconds(
     actual_preflight_seconds: float,
     seconds_per_optimizer_step: float,
     full_test_evaluation_seconds: float,
+    retained_run_plan: RetainedRunPlan,
 ) -> float:
     """Apply the approved conservative GPU-time projection formula."""
 
@@ -295,26 +520,73 @@ def project_gpu_seconds(
     )
     if any(not math.isfinite(value) or value < 0 for value in inputs):
         raise ValueError("Projection inputs must be finite non-negative seconds")
-    return actual_preflight_seconds + RESERVE_MULTIPLIER * (
-        RETAINED_TRAINING_RUNS
+    retained_seconds = sum(
+        stage.training_runs
         * (
-            OPTIMIZER_STEPS_PER_RUN * seconds_per_optimizer_step
-            + EVALUATIONS_PER_RUN * full_test_evaluation_seconds
+            stage.optimizer_steps_per_run * seconds_per_optimizer_step
+            + stage.evaluations_per_run * full_test_evaluation_seconds
         )
-        + FINAL_EVALUATIONS * full_test_evaluation_seconds
+        for stage in retained_run_plan.stages
     )
+    final_seconds = (
+        retained_run_plan.final_evaluations * full_test_evaluation_seconds
+    )
+    return actual_preflight_seconds + RESERVE_MULTIPLIER * (
+        retained_seconds + final_seconds
+    )
+
+
+def _validate_stage_hashes(
+    values: Sequence[str], *, stage: str, maximum: int
+) -> tuple[str, ...]:
+    hashes = tuple(values)
+    if len(hashes) > maximum:
+        raise ValueError(f"Too many {stage} configuration checksums")
+    if any(not _valid_sha256(value) for value in hashes):
+        raise ValueError(
+            f"{stage.capitalize()} config checksums must be lowercase SHA-256 values"
+        )
+    if len(set(hashes)) != len(hashes):
+        raise ValueError(f"{stage.capitalize()} config checksums must be unique")
+    return hashes
 
 
 def build_compute_gate_manifest(
     *,
     hardware: HardwareEvidence,
     smoke: Week1SmokeEvidence | None,
+    evaluation_batch_attempts: Sequence[EvaluationBatchAttempt] = (),
     calibration_attempts: Sequence[CalibrationAttempt] = (),
     pilot: PilotEvidence | None = None,
     actual_preflight_seconds: float | None = None,
-    retained_config_sha256: Sequence[str] = (),
+    baseline_config_sha256: Sequence[str] = (),
+    retained_run_plan: RetainedRunPlan = DEFAULT_RETAINED_RUN_PLAN,
 ) -> dict[str, Any]:
     """Build a deterministic gate decision; incomplete evidence always stops."""
+
+    evaluation_attempts = tuple(evaluation_batch_attempts)
+    if len(evaluation_attempts) > len(EVALUATION_BATCH_CANDIDATES):
+        raise ValueError("Too many evaluation-batch calibration attempts")
+    observed_evaluation_order = tuple(
+        attempt.evaluation_batch_size for attempt in evaluation_attempts
+    )
+    expected_evaluation_order = EVALUATION_BATCH_CANDIDATES[
+        : len(evaluation_attempts)
+    ]
+    if observed_evaluation_order != expected_evaluation_order:
+        raise ValueError(
+            "Evaluation calibration attempts must follow 32, 16, 8, 4, 2, 1 order"
+        )
+    if any(attempt.passed for attempt in evaluation_attempts[:-1]):
+        raise ValueError(
+            "Evaluation calibration must stop after its first passing attempt"
+        )
+    selected_evaluation_batch_size = (
+        evaluation_attempts[-1].evaluation_batch_size
+        if evaluation_attempts and evaluation_attempts[-1].passed
+        else None
+    )
+    evaluation_calibration_complete = selected_evaluation_batch_size is not None
 
     attempts = tuple(calibration_attempts)
     if len(attempts) > len(CALIBRATION_BATCH_CANDIDATES):
@@ -329,19 +601,17 @@ def build_compute_gate_manifest(
         attempts[-1].physical_batch_size if attempts and attempts[-1].passed else None
     )
     calibration_complete = selected_physical_batch_size is not None
-    pilot_complete = (
-        pilot is not None and pilot.complete_for(selected_physical_batch_size)
+    pilot_complete = pilot is not None and pilot.complete_for(
+        selected_physical_batch_size, selected_evaluation_batch_size
     )
     if actual_preflight_seconds is not None:
         _require_finite_nonnegative(
             actual_preflight_seconds, "Actual preflight seconds"
         )
-    retained_hashes = tuple(retained_config_sha256)
-    if any(not _valid_sha256(value) for value in retained_hashes):
-        raise ValueError("Retained config checksums must be lowercase SHA-256 values")
-    if len(set(retained_hashes)) != len(retained_hashes):
-        raise ValueError("Retained config checksums must be unique")
-    retained_hashes_complete = len(retained_hashes) == RETAINED_TRAINING_RUNS
+    baseline_hashes = _validate_stage_hashes(
+        baseline_config_sha256, stage="baseline", maximum=6
+    )
+    baseline_hashes_complete = len(baseline_hashes) == 6
 
     smoke_verified = smoke is not None and smoke.verified
     hardware_matches_target = (
@@ -358,12 +628,15 @@ def build_compute_gate_manifest(
         reasons.append("week1_smoke_not_verified")
     if not hardware_matches_target:
         reasons.append("target_hardware_not_verified")
+    if not evaluation_calibration_complete:
+        reasons.append("evaluation_batch_calibration_incomplete")
     if not calibration_complete:
         reasons.append("microbatch_calibration_incomplete")
     if not pilot_complete:
         reasons.append("pilot_incomplete")
     projection_available = (
-        calibration_complete
+        evaluation_calibration_complete
+        and calibration_complete
         and pilot_complete
         and actual_preflight_seconds is not None
     )
@@ -376,14 +649,16 @@ def build_compute_gate_manifest(
             full_test_evaluation_seconds=(
                 pilot.slower_full_test_evaluation_seconds
             ),
+            retained_run_plan=retained_run_plan,
         )
     else:
         reasons.append("approved_projection_unavailable")
-    if not retained_hashes_complete:
-        reasons.append("retained_configuration_hashes_missing")
+    if not baseline_hashes_complete:
+        reasons.append("baseline_configuration_hashes_missing")
     if projected_seconds is not None and projected_seconds > GPU_TIME_CAP_SECONDS:
         reasons.append("projected_time_exceeds_48_gpu_hour_cap")
-    retained_training_authorized = not reasons
+    baseline_authorized = not reasons
+    retained_training_authorized = baseline_authorized
     projection_status = (
         "UNAVAILABLE"
         if projected_seconds is None
@@ -407,7 +682,7 @@ def build_compute_gate_manifest(
         pilot_payload = pilot.to_dict(complete=pilot_complete)
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "assessment_kind": "compute-gate",
         "evidence_cutoff_utc": (
             pilot.finished_at_utc
@@ -422,7 +697,9 @@ def build_compute_gate_manifest(
             "compatibility": (
                 (
                     "RETAINED_RUN_PREFLIGHT_COMPLETE"
-                    if calibration_complete and pilot_complete
+                    if evaluation_calibration_complete
+                    and calibration_complete
+                    and pilot_complete
                     else "WEEK1_SMOKE_ONLY"
                 )
                 if hardware_matches_target and smoke_verified
@@ -448,6 +725,13 @@ def build_compute_gate_manifest(
             ),
             "scope": "one-step non-result viability evidence",
         },
+        "evaluation_batch_calibration": {
+            "complete": evaluation_calibration_complete,
+            "required_batch_candidates": list(EVALUATION_BATCH_CANDIDATES),
+            "minimum_free_memory_mib": MINIMUM_FREE_MEMORY_MIB,
+            "attempts": [attempt.to_dict() for attempt in evaluation_attempts],
+            "selected_evaluation_batch_size": selected_evaluation_batch_size,
+        },
         "microbatch_calibration": {
             "complete": calibration_complete,
             "required_batch_candidates": list(CALIBRATION_BATCH_CANDIDATES),
@@ -460,15 +744,15 @@ def build_compute_gate_manifest(
             "status": projection_status,
             "formula": (
                 "actual_preflight_seconds + 1.20 * "
-                "(9 * (20000 * s + 200 * e) + 2 * e)"
+                "(sum(stage_runs * (stage_steps * s + stage_evaluations * e)) "
+                "+ final_evaluations * e)"
             ),
             "cap_seconds": GPU_TIME_CAP_SECONDS,
             "cap_gpu_hours": 48,
             "reserve_multiplier": RESERVE_MULTIPLIER,
-            "retained_training_runs": RETAINED_TRAINING_RUNS,
-            "optimizer_steps_per_run": OPTIMIZER_STEPS_PER_RUN,
-            "evaluations_per_run": EVALUATIONS_PER_RUN,
-            "final_evaluations": FINAL_EVALUATIONS,
+            "retained_run_plan": retained_run_plan.to_dict(),
+            "retained_training_runs": retained_run_plan.training_runs,
+            "final_evaluations": retained_run_plan.final_evaluations,
             "seconds_per_optimizer_step": (
                 pilot.seconds_per_optimizer_step if pilot_complete else None
             ),
@@ -485,13 +769,65 @@ def build_compute_gate_manifest(
                 projected_seconds / 3_600 if projected_seconds is not None else None
             ),
         },
-        "retained_config_sha256": list(retained_hashes),
+        "authorization": {
+            "baseline": {
+                "authorized": baseline_authorized,
+                "expected_config_count": 6,
+                "config_sha256": list(baseline_hashes),
+            },
+            "rank": {
+                "authorized": False,
+                "expected_config_count": 3,
+                "config_sha256": [],
+                "requires_stage": "baseline",
+            },
+        },
         "decision": {
             "status": "PASS" if retained_training_authorized else "STOP",
             "retained_training_authorized": retained_training_authorized,
             "reasons": reasons,
         },
     }
+
+
+def authorize_rank_stage(
+    manifest: Mapping[str, Any], *, rank_config_sha256: Sequence[str]
+) -> dict[str, Any]:
+    """Add three post-selection rank hashes to an authorized baseline gate."""
+
+    rank_hashes = _validate_stage_hashes(
+        rank_config_sha256, stage="rank", maximum=3
+    )
+    if len(rank_hashes) != 3:
+        raise ComputeGateError(
+            "Rank authorization requires exactly three configuration checksums"
+        )
+    authorization = manifest.get("authorization")
+    if not isinstance(authorization, Mapping):
+        raise ComputeGateError("Compute-gate stage authorization is incomplete")
+    baseline = authorization.get("baseline")
+    if not isinstance(baseline, Mapping):
+        raise ComputeGateError("Compute-gate baseline stage is not authorized")
+    baseline_hashes = baseline.get("config_sha256")
+    if not isinstance(baseline_hashes, list) or not baseline_hashes:
+        raise ComputeGateError("Compute-gate baseline stage is not authorized")
+    require_retained_training_authorization(
+        manifest,
+        stage="baseline",
+        resolved_config_sha256=baseline_hashes[0],
+    )
+    if set(baseline_hashes) & set(rank_hashes):
+        raise ComputeGateError(
+            "Rank configuration checksums must be distinct from baseline checksums"
+        )
+    updated = json.loads(json.dumps(manifest))
+    updated["authorization"]["rank"] = {
+        "authorized": True,
+        "expected_config_count": 3,
+        "config_sha256": list(rank_hashes),
+        "requires_stage": "baseline",
+    }
+    return updated
 
 
 def load_week1_evidence(
@@ -603,22 +939,24 @@ def _load_json_object(path: Path) -> dict[str, Any]:
 
 
 def require_authorization_from_files(
-    *, gate_manifest_path: Path, resolved_config_path: Path
+    *, gate_manifest_path: Path, resolved_config_path: Path, stage: str
 ) -> None:
     """Apply the fail-closed retained-run check to concrete locked files."""
 
     manifest = _load_json_object(gate_manifest_path)
     resolved_config_sha256 = sha256(resolved_config_path.read_bytes()).hexdigest()
     require_retained_training_authorization(
-        manifest, resolved_config_sha256=resolved_config_sha256
+        manifest, stage=stage, resolved_config_sha256=resolved_config_sha256
     )
 
 
 def require_retained_training_authorization(
-    manifest: Mapping[str, Any], *, resolved_config_sha256: str
+    manifest: Mapping[str, Any], *, stage: str, resolved_config_sha256: str
 ) -> None:
-    """Fail closed unless complete measured evidence authorizes this config."""
+    """Fail closed unless complete measured evidence authorizes this stage/config."""
 
+    if stage not in {"baseline", "rank"}:
+        raise ComputeGateError(f"Unsupported retained-training stage: {stage}")
     if not _valid_sha256(resolved_config_sha256):
         raise ComputeGateError("Requested configuration checksum is invalid")
     decision = manifest.get("decision")
@@ -634,17 +972,22 @@ def require_retained_training_authorization(
 
     hardware = manifest.get("hardware")
     smoke = manifest.get("week1_smoke")
+    evaluation_calibration = manifest.get("evaluation_batch_calibration")
     calibration = manifest.get("microbatch_calibration")
     pilot = manifest.get("pilot")
     projection = manifest.get("projection")
-    hashes = manifest.get("retained_config_sha256")
+    authorization = manifest.get("authorization")
     complete_sections = (
-        manifest.get("schema_version") == 1
+        manifest.get("schema_version") == 2
         and decision.get("reasons") == []
         and isinstance(hardware, Mapping)
         and hardware.get("compatibility") == "RETAINED_RUN_PREFLIGHT_COMPLETE"
         and isinstance(smoke, Mapping)
         and smoke.get("verified") is True
+        and isinstance(evaluation_calibration, Mapping)
+        and evaluation_calibration.get("complete") is True
+        and evaluation_calibration.get("selected_evaluation_batch_size")
+        in EVALUATION_BATCH_CANDIDATES
         and isinstance(calibration, Mapping)
         and calibration.get("complete") is True
         and calibration.get("selected_physical_batch_size")
@@ -654,10 +997,8 @@ def require_retained_training_authorization(
         and isinstance(projection, Mapping)
         and projection.get("status") == "WITHIN_CAP"
         and projection.get("cap_seconds") == GPU_TIME_CAP_SECONDS
-        and isinstance(hashes, list)
-        and len(hashes) == RETAINED_TRAINING_RUNS
-        and len(set(hashes)) == RETAINED_TRAINING_RUNS
-        and all(isinstance(value, str) and _valid_sha256(value) for value in hashes)
+        and _projection_plan_is_complete(projection)
+        and isinstance(authorization, Mapping)
     )
     if not complete_sections:
         raise ComputeGateError("Compute-gate PASS evidence is incomplete")
@@ -669,7 +1010,71 @@ def require_retained_training_authorization(
         or projected_seconds > GPU_TIME_CAP_SECONDS
     ):
         raise ComputeGateError("Compute-gate projection is missing or above the cap")
+    assert isinstance(authorization, Mapping)
+    stage_authorization = authorization.get(stage)
+    if not isinstance(stage_authorization, Mapping):
+        raise ComputeGateError("Compute-gate stage authorization is incomplete")
+    expected_count = 6 if stage == "baseline" else 3
+    hashes = stage_authorization.get("config_sha256")
+    stage_complete = (
+        stage_authorization.get("authorized") is True
+        and stage_authorization.get("expected_config_count") == expected_count
+        and isinstance(hashes, list)
+        and len(hashes) == expected_count
+        and len(set(hashes)) == expected_count
+        and all(isinstance(value, str) and _valid_sha256(value) for value in hashes)
+    )
+    if not stage_complete:
+        raise ComputeGateError(f"Compute-gate {stage} stage is not authorized")
+    if stage == "rank":
+        baseline = authorization.get("baseline")
+        if not isinstance(baseline, Mapping) or baseline.get("authorized") is not True:
+            raise ComputeGateError("Compute-gate rank stage requires baseline authorization")
     if resolved_config_sha256 not in hashes:
         raise ComputeGateError(
             "Requested configuration is not listed in the compute-gate manifest"
         )
+
+
+def _projection_plan_is_complete(projection: Mapping[str, Any]) -> bool:
+    plan = projection.get("retained_run_plan")
+    if not isinstance(plan, Mapping):
+        return False
+    stages = plan.get("stages")
+    if not isinstance(stages, list):
+        return False
+    stage_specs: dict[str, tuple[int, int, int]] = {}
+    for stage in stages:
+        if not isinstance(stage, Mapping):
+            return False
+        name = stage.get("name")
+        runs = stage.get("training_runs")
+        steps = stage.get("optimizer_steps_per_run")
+        evaluations = stage.get("evaluations_per_run")
+        if (
+            not isinstance(name, str)
+            or not name
+            or type(runs) is not int
+            or runs < 0
+            or type(steps) is not int
+            or steps < 0
+            or type(evaluations) is not int
+            or evaluations < 0
+            or name in stage_specs
+        ):
+            return False
+        stage_specs[name] = (runs, steps, evaluations)
+    baseline = stage_specs.get("baseline")
+    rank = stage_specs.get("rank")
+    return (
+        baseline is not None
+        and baseline[0] >= 6
+        and baseline[1:] == (OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN)
+        and rank is not None
+        and rank[0] >= 3
+        and rank[1:] == (OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN)
+        and plan.get("training_runs")
+        == sum(specification[0] for specification in stage_specs.values())
+        and type(plan.get("final_evaluations")) is int
+        and plan["final_evaluations"] >= 0
+    )

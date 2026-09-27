@@ -9,9 +9,13 @@ import pytest
 from ds340w_repro.preflight import (
     CalibrationAttempt,
     ComputeGateError,
+    EvaluationBatchAttempt,
     HardwareEvidence,
     PilotEvidence,
+    RetainedRunPlan,
+    RetainedRunStage,
     Week1SmokeEvidence,
+    authorize_rank_stage,
     build_compute_gate_manifest,
     load_week1_evidence,
     project_gpu_seconds,
@@ -29,7 +33,7 @@ def _hardware() -> HardwareEvidence:
     return HardwareEvidence(
         gpu_name="NVIDIA GeForce RTX 4060",
         total_memory_mib=8_188,
-        driver_version="610.88",
+        driver_version="616.92",
         cuda_available=True,
     )
 
@@ -50,15 +54,59 @@ def _smoke() -> Week1SmokeEvidence:
     )
 
 
+def _evaluation_attempt(batch_size: int = 32) -> EvaluationBatchAttempt:
+    return EvaluationBatchAttempt(
+        evaluation_batch_size=batch_size,
+        config_sha256="9" * 64,
+        started_at_utc="2026-09-07T00:00:00+00:00",
+        finished_at_utc="2026-09-07T00:01:00+00:00",
+        fresh_process=True,
+        evaluated_samples=436,
+        exit_status=0,
+        oom=False,
+        minimum_free_memory_mib=900.0,
+    )
+
+
 def test_projection_uses_the_predeclared_conservative_formula() -> None:
+    plan = RetainedRunPlan(
+        stages=(
+            RetainedRunStage("baseline", training_runs=6),
+            RetainedRunStage("rank", training_runs=3),
+        ),
+        final_evaluations=2,
+    )
     projection = project_gpu_seconds(
         actual_preflight_seconds=600.0,
         seconds_per_optimizer_step=0.5,
         full_test_evaluation_seconds=30.0,
+        retained_run_plan=plan,
     )
 
     expected = 600.0 + 1.20 * (9 * (20_000 * 0.5 + 200 * 30.0) + 2 * 30.0)
     assert projection == pytest.approx(expected)
+
+
+def test_projection_expands_from_the_declared_run_plan() -> None:
+    plan = RetainedRunPlan(
+        stages=(
+            RetainedRunStage("baseline", training_runs=6),
+            RetainedRunStage("rank", training_runs=3),
+            RetainedRunStage("confirmation", training_runs=4),
+        ),
+        final_evaluations=2,
+    )
+
+    projection = project_gpu_seconds(
+        actual_preflight_seconds=600.0,
+        seconds_per_optimizer_step=0.5,
+        full_test_evaluation_seconds=30.0,
+        retained_run_plan=plan,
+    )
+
+    expected = 600.0 + 1.20 * (13 * (20_000 * 0.5 + 200 * 30.0) + 2 * 30.0)
+    assert projection == pytest.approx(expected)
+    assert plan.to_dict()["training_runs"] == 13
 
 
 def test_week1_smoke_proves_feasibility_but_does_not_authorize_long_runs() -> None:
@@ -70,16 +118,18 @@ def test_week1_smoke_proves_feasibility_but_does_not_authorize_long_runs() -> No
     assert manifest["hardware"]["compatibility"] == "WEEK1_SMOKE_ONLY"
     assert manifest["hardware"]["gpu_name"] == "NVIDIA GeForce RTX 4060"
     assert manifest["week1_smoke"]["verified"] is True
+    assert manifest["evaluation_batch_calibration"]["complete"] is False
     assert manifest["microbatch_calibration"]["complete"] is False
     assert manifest["pilot"]["complete"] is False
     assert manifest["projection"]["status"] == "UNAVAILABLE"
     assert manifest["projection"]["cap_seconds"] == 172_800
     assert manifest["decision"] == {
         "reasons": [
+            "evaluation_batch_calibration_incomplete",
             "microbatch_calibration_incomplete",
             "pilot_incomplete",
             "approved_projection_unavailable",
-            "retained_configuration_hashes_missing",
+            "baseline_configuration_hashes_missing",
         ],
         "retained_training_authorized": False,
         "status": "STOP",
@@ -133,19 +183,35 @@ def test_complete_measured_evidence_under_the_cap_authorizes_the_grid() -> None:
         full_test_evaluation_seconds=(5.0, 4.5),
         do_test=False,
         exit_status=0,
+        evaluation_batch_size=16,
     )
-    retained_hashes = tuple(f"{number:064x}" for number in range(1, 10))
+    baseline_hashes = tuple(f"{number:064x}" for number in range(1, 7))
 
     manifest = build_compute_gate_manifest(
         hardware=_hardware(),
         smoke=_smoke(),
+        evaluation_batch_attempts=(
+            EvaluationBatchAttempt(
+                evaluation_batch_size=32,
+                config_sha256="8" * 64,
+                started_at_utc="2026-09-07T00:00:00+00:00",
+                finished_at_utc="2026-09-07T00:00:30+00:00",
+                fresh_process=True,
+                evaluated_samples=0,
+                exit_status=1,
+                oom=True,
+                minimum_free_memory_mib=100.0,
+            ),
+            _evaluation_attempt(16),
+        ),
         calibration_attempts=(failed_batch_eight, passed_batch_four),
         pilot=pilot,
         actual_preflight_seconds=600.0,
-        retained_config_sha256=retained_hashes,
+        baseline_config_sha256=baseline_hashes,
     )
 
     assert manifest["microbatch_calibration"]["selected_physical_batch_size"] == 4
+    assert manifest["evaluation_batch_calibration"]["selected_evaluation_batch_size"] == 16
     assert manifest["pilot"]["seconds_per_optimizer_step"] == pytest.approx(0.1)
     assert manifest["pilot"]["full_test_evaluation_seconds"] == pytest.approx(5.0)
     assert manifest["projection"]["projected_seconds"] == pytest.approx(33_012.0)
@@ -155,6 +221,21 @@ def test_complete_measured_evidence_under_the_cap_authorizes_the_grid() -> None:
         "retained_training_authorized": True,
         "status": "PASS",
     }
+    assert manifest["authorization"]["baseline"]["authorized"] is True
+    assert manifest["authorization"]["rank"]["authorized"] is False
+
+    rank_hashes = tuple(f"{number:064x}" for number in range(7, 10))
+    with_rank = authorize_rank_stage(manifest, rank_config_sha256=rank_hashes)
+
+    assert with_rank["authorization"]["rank"]["authorized"] is True
+    assert (
+        require_retained_training_authorization(
+            with_rank,
+            stage="rank",
+            resolved_config_sha256=rank_hashes[0],
+        )
+        is None
+    )
 
 
 def test_projection_above_48_gpu_hours_stops_retained_training() -> None:
@@ -189,15 +270,32 @@ def test_projection_above_48_gpu_hours_stops_retained_training() -> None:
         full_test_evaluation_seconds=(30.0, 25.0),
         do_test=False,
         exit_status=0,
+        evaluation_batch_size=16,
     )
 
     manifest = build_compute_gate_manifest(
         hardware=_hardware(),
         smoke=_smoke(),
+        evaluation_batch_attempts=(
+            EvaluationBatchAttempt(
+                evaluation_batch_size=32,
+                config_sha256="8" * 64,
+                started_at_utc="2026-09-07T00:00:00+00:00",
+                finished_at_utc="2026-09-07T00:00:30+00:00",
+                fresh_process=True,
+                evaluated_samples=0,
+                exit_status=1,
+                oom=True,
+                minimum_free_memory_mib=100.0,
+            ),
+            _evaluation_attempt(16),
+        ),
         calibration_attempts=(calibration,),
         pilot=slow_pilot,
         actual_preflight_seconds=600.0,
-        retained_config_sha256=tuple(f"{number:064x}" for number in range(1, 10)),
+        baseline_config_sha256=tuple(
+            f"{number:064x}" for number in range(1, 7)
+        ),
     )
 
     assert manifest["projection"]["projected_seconds"] == pytest.approx(173_472.0)
@@ -222,11 +320,11 @@ def test_authorizer_fails_closed_for_stop_or_incomplete_pass_manifest() -> None:
 
     with pytest.raises(ComputeGateError, match="STOP"):
         require_retained_training_authorization(
-            stopped, resolved_config_sha256="1" * 64
+            stopped, stage="baseline", resolved_config_sha256="1" * 64
         )
     with pytest.raises(ComputeGateError, match="incomplete"):
         require_retained_training_authorization(
-            forged_pass, resolved_config_sha256="1" * 64
+            forged_pass, stage="baseline", resolved_config_sha256="1" * 64
         )
 
 
@@ -257,10 +355,11 @@ def test_checked_environment_and_smoke_manifests_load_as_week1_evidence() -> Non
 
 
 def test_authorizer_accepts_only_a_hash_listed_by_a_complete_pass() -> None:
-    retained_hashes = tuple(f"{number:064x}" for number in range(1, 10))
+    baseline_hashes = tuple(f"{number:064x}" for number in range(1, 7))
     manifest = build_compute_gate_manifest(
         hardware=_hardware(),
         smoke=_smoke(),
+        evaluation_batch_attempts=(_evaluation_attempt(),),
         calibration_attempts=(
             CalibrationAttempt(
                 physical_batch_size=8,
@@ -294,20 +393,23 @@ def test_authorizer_accepts_only_a_hash_listed_by_a_complete_pass() -> None:
             full_test_evaluation_seconds=(5.0, 4.5),
             do_test=False,
             exit_status=0,
+            evaluation_batch_size=32,
         ),
         actual_preflight_seconds=600.0,
-        retained_config_sha256=retained_hashes,
+        baseline_config_sha256=baseline_hashes,
     )
 
     assert (
         require_retained_training_authorization(
-            manifest, resolved_config_sha256=retained_hashes[0]
+            manifest,
+            stage="baseline",
+            resolved_config_sha256=baseline_hashes[0],
         )
         is None
     )
     with pytest.raises(ComputeGateError, match="not listed"):
         require_retained_training_authorization(
-            manifest, resolved_config_sha256="f" * 64
+            manifest, stage="baseline", resolved_config_sha256="f" * 64
         )
 
 
@@ -343,6 +445,7 @@ def test_week1_manifest_writer_is_deterministic_and_file_gate_stops_run(
         require_authorization_from_files(
             gate_manifest_path=output,
             resolved_config_path=resolved_config,
+            stage="baseline",
         )
 
 

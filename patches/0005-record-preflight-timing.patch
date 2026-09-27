@@ -1,0 +1,85 @@
+diff --git a/examples/legacies/examples_seq2seq/run_seq2seq.py b/examples/legacies/examples_seq2seq/run_seq2seq.py
+index 2d1293a..1529f6e 100644
+--- a/examples/legacies/examples_seq2seq/run_seq2seq.py
++++ b/examples/legacies/examples_seq2seq/run_seq2seq.py
+@@ -15,6 +15,8 @@ Fine-tuning the library models for sequence to sequence.
+ # You can also adapt this script on your own sequence to sequence task. Pointers for this are left as comments.
+ import functools
++import json
+ import logging
++import time
+ # from opendelta.utils.delta_center import create_hub_repo_name
+ import torch
+ import os
+@@ -32,6 +34,7 @@ from transformers import (
+     default_data_collator,
+     set_seed,
+ )
++from transformers.trainer_callback import TrainerCallback
+ from transformers.trainer_utils import is_main_process, get_last_checkpoint
+ # from ..seq2seq.utils import get_adapter_config
+ from examples_seq2seq.data_processors import AutoTask, TaskDataCollatorForSeq2Seq, AutoPostProcessor
+@@ -106,6 +109,53 @@ class RemainArgHfArgumentParser(HfArgumentParser):
+         else:
+             return (*outputs,)
+ 
++
++class PreflightTimingCallback(TrainerCallback):
++    """Record pilot timing without changing the authors' training loop."""
++
++    def __init__(self, output_path):
++        self.output_path = output_path
++        self.steady_start = None
++        self.evaluation_seconds = []
++
++    @staticmethod
++    def _synchronize():
++        if torch.cuda.is_available():
++            torch.cuda.synchronize()
++
++    def on_step_end(self, args, state, control, **kwargs):
++        if state.global_step == 20 and self.steady_start is None:
++            self._synchronize()
++            self.steady_start = time.perf_counter()
++        return control
++
++    def on_evaluate(self, args, state, control, metrics=None, **kwargs):
++        if self.steady_start is not None and metrics is not None:
++            runtime = metrics.get("eval_runtime")
++            if isinstance(runtime, (int, float)) and runtime >= 0:
++                self.evaluation_seconds.append(float(runtime))
++        return control
++
++    def on_train_end(self, args, state, control, **kwargs):
++        if self.steady_start is None:
++            return control
++        self._synchronize()
++        elapsed = time.perf_counter() - self.steady_start
++        payload = {
++            "schema_version": 1,
++            "completed_optimizer_steps": state.global_step,
++            "warmup_steps_excluded": 20,
++            "elapsed_seconds_steps_21_to_end": elapsed,
++            "evaluation_measurements_seconds": self.evaluation_seconds,
++            "non_evaluation_seconds_steps_21_to_end": max(
++                0.0, elapsed - sum(self.evaluation_seconds)
++            ),
++        }
++        with open(self.output_path, "w", encoding="utf-8") as stream:
++            json.dump(payload, stream, indent=2, sort_keys=True)
++            stream.write("\n")
++        return control
++
+ # from transformers.trainer_callback import TrainerCallback
+ 
+ # class MyCallback(TrainerCallback):
+@@ -418,6 +465,9 @@ def main():
+         evaluation_metrics = TASK_TO_METRICS[data_args.dataset_name[0]],
+     )
+ 
++    preflight_timing_path = os.environ.get("DS340W_PREFLIGHT_TIMING_PATH")
++    if preflight_timing_path:
++        trainer.add_callback(PreflightTimingCallback(preflight_timing_path))
+     # trainer.add_callback(MyCallback(trainer_args=training_args, delta_args=delta_args, model_args=model_args))
+ 
+ 

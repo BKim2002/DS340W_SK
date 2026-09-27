@@ -37,6 +37,15 @@
       "touched_paths": [
         "examples/legacies/examples_seq2seq/seq2seq_trainer.py"
       ]
+    },
+    {
+      "path": "patches/0005-record-preflight-timing.patch",
+      "sha256": "fdb3f2f1fe8529192aad4fcd733225bfe92fe76caca7c2bb58cebce27e75506d",
+      "classification": "observation-only",
+      "rationale": "Record steady-state pilot and evaluation timing through a Trainer callback without changing the authors' training loop.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/run_seq2seq.py"
+      ]
     }
   ]
 }

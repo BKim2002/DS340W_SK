@@ -23,7 +23,11 @@ from ds340w_repro.data.materialize_sst2 import (
     TRAINING_FILENAME,
     verify_course_data,
 )
-from ds340w_repro.preflight import require_retained_training_authorization
+from ds340w_repro.preflight import (
+    ComputeGateError,
+    require_retained_training_authorization,
+    validated_preflight_phase,
+)
 from ds340w_repro.provenance import verify_upstream
 
 
@@ -226,7 +230,7 @@ def enforce_compute_gate(
     gate_manifest_path: Path,
     resolved_config_path: Path,
 ) -> None:
-    """Allow the bounded Week 1 smoke; gate every retained training run."""
+    """Allow exact smoke/preflight shapes; stage-gate retained training."""
 
     if sha256(resolved_config_path.read_bytes()).hexdigest() != config.sha256:
         raise ValueError("Resolved configuration file is not canonical")
@@ -242,9 +246,27 @@ def enforce_compute_gate(
     )
     if bounded_smoke:
         return
+    if validated_preflight_phase(config) is not None:
+        return
+
+    baseline_ids = {
+        f"baseline-r8-lr{learning_rate}-eb{effective_batch}"
+        for learning_rate in ("1e-4", "5e-4", "1e-3")
+        for effective_batch in (16, 32)
+    }
+    if config.experiment_id in baseline_ids:
+        stage = "baseline"
+    elif config.experiment_id in {"rank-r2", "rank-r4", "rank-r16"}:
+        stage = "rank"
+    else:
+        raise ComputeGateError(
+            f"Unsupported experiment at OpenDelta execution boundary: "
+            f"{config.experiment_id}"
+        )
     manifest = json.loads(gate_manifest_path.read_text(encoding="utf-8"))
     require_retained_training_authorization(
         manifest,
+        stage=stage,
         resolved_config_sha256=config.sha256,
     )
 
@@ -405,6 +427,10 @@ def invoke_original_runner(
             "CUDA_VISIBLE_DEVICES": "0",
         }
     )
+    if validated_preflight_phase(config) == "pilot":
+        environment["DS340W_PREFLIGHT_TIMING_PATH"] = str(
+            output_dir / "preflight-timing.json"
+        )
     started_at = datetime.now(timezone.utc)
     started_clock = time.perf_counter()
     completed = subprocess.run(
