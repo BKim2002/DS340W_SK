@@ -25,7 +25,80 @@
     "status": "STOP"
   },
   "evaluation_batch_calibration": {
-    "attempts": [],
+    "attempts": [
+      {
+        "config_sha256": "7f11815cb51e8a25837c5130b221abda7009dbd5b9e2d38ba24facaec1fa6ace",
+        "evaluated_samples": 1,
+        "evaluation_batch_size": 32,
+        "exit_status": 0,
+        "finished_at_utc": "2026-09-27T01:10:59.040652+00:00",
+        "fresh_process": true,
+        "minimum_free_memory_mib": 5676.0,
+        "oom": false,
+        "passed": false,
+        "started_at_utc": "2026-09-27T01:10:29.831821+00:00"
+      },
+      {
+        "config_sha256": "ce52ce053af3a8ecbf448aafd0f72d87257869d332d0630a0b654888d55d0b2b",
+        "evaluated_samples": 1,
+        "evaluation_batch_size": 16,
+        "exit_status": 0,
+        "finished_at_utc": "2026-09-27T01:11:25.845846+00:00",
+        "fresh_process": true,
+        "minimum_free_memory_mib": 5682.0,
+        "oom": false,
+        "passed": false,
+        "started_at_utc": "2026-09-27T01:10:59.063325+00:00"
+      },
+      {
+        "config_sha256": "ba00efdce6723e658fc751c7db0b92656b88706202b6bed3bd5c95ee19a10bb6",
+        "evaluated_samples": 1,
+        "evaluation_batch_size": 8,
+        "exit_status": 0,
+        "finished_at_utc": "2026-09-27T01:11:52.358255+00:00",
+        "fresh_process": true,
+        "minimum_free_memory_mib": 5676.0,
+        "oom": false,
+        "passed": false,
+        "started_at_utc": "2026-09-27T01:11:25.865171+00:00"
+      },
+      {
+        "config_sha256": "4e2928827a7abb5e7001133304b2c2e17c74d67b0ac43979e60eb89c2e70a2e5",
+        "evaluated_samples": 1,
+        "evaluation_batch_size": 4,
+        "exit_status": 0,
+        "finished_at_utc": "2026-09-27T01:12:18.599076+00:00",
+        "fresh_process": true,
+        "minimum_free_memory_mib": 5675.0,
+        "oom": false,
+        "passed": false,
+        "started_at_utc": "2026-09-27T01:11:52.384985+00:00"
+      },
+      {
+        "config_sha256": "97c50468f6c9fdcd66aa209240763384a65cc27823446f55062837dfac562dfc",
+        "evaluated_samples": 1,
+        "evaluation_batch_size": 2,
+        "exit_status": 0,
+        "finished_at_utc": "2026-09-27T01:12:45.171719+00:00",
+        "fresh_process": true,
+        "minimum_free_memory_mib": 5674.0,
+        "oom": false,
+        "passed": false,
+        "started_at_utc": "2026-09-27T01:12:18.616894+00:00"
+      },
+      {
+        "config_sha256": "b7d4c418842c3ce9683a89d3af495aeb52df2917ef9a7b73f9426425ca2503a4",
+        "evaluated_samples": 1,
+        "evaluation_batch_size": 1,
+        "exit_status": 0,
+        "finished_at_utc": "2026-09-27T01:13:10.106900+00:00",
+        "fresh_process": true,
+        "minimum_free_memory_mib": 5674.0,
+        "oom": false,
+        "passed": false,
+        "started_at_utc": "2026-09-27T01:12:45.189629+00:00"
+      }
+    ],
     "complete": false,
     "minimum_free_memory_mib": 512,
     "required_batch_candidates": [
@@ -90,11 +163,17 @@
           "name": "rank",
           "optimizer_steps_per_run": 20000,
           "training_runs": 3
+        },
+        {
+          "evaluations_per_run": 200,
+          "name": "confirmation",
+          "optimizer_steps_per_run": 20000,
+          "training_runs": 4
         }
       ],
-      "training_runs": 9
+      "training_runs": 13
     },
-    "retained_training_runs": 9,
+    "retained_training_runs": 13,
     "seconds_per_optimizer_step": null,
     "status": "UNAVAILABLE"
   },

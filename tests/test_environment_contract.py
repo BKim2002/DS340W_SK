@@ -7,10 +7,35 @@ import sys
 
 import torch
 
+import scripts.probe_environment as environment_probe
 from scripts.probe_environment import portable_path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_environment_probe_records_positive_wall_duration(
+    tmp_path: Path, monkeypatch
+) -> None:
+    (tmp_path / "requirements.lock").write_text(
+        "example-package==1.0\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        environment_probe, "_installed_packages", lambda: {"example-package": "1.0"}
+    )
+    monkeypatch.setattr(environment_probe, "_determinism_report", lambda _torch: {})
+    monkeypatch.setattr(
+        environment_probe,
+        "_gpu_report",
+        lambda _torch: ([{"index": 0}], "test-driver"),
+    )
+    monkeypatch.setattr(environment_probe, "_os_release", lambda: {})
+    monkeypatch.setattr(environment_probe, "_git_report", lambda _root: {})
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+
+    report = environment_probe.probe_environment(tmp_path)
+
+    assert report["probe_wall_seconds"] > 0.0
 
 
 def test_environment_paths_are_sanitized_for_public_manifests(tmp_path: Path) -> None:

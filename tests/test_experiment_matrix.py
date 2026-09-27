@@ -2,7 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from ds340w_repro.build_matrix import build_baseline_matrix, build_rank_matrix
+from ds340w_repro.build_matrix import (
+    build_baseline_matrix,
+    build_evaluation_calibration_config,
+    build_pilot_config,
+    build_rank_matrix,
+    build_smoke_config,
+    build_training_calibration_config,
+)
 from ds340w_repro.config_schema import ResolvedConfig, validate_nonfinal_config
 from ds340w_repro.run_opendelta import resolve_runner_payload
 
@@ -99,6 +106,57 @@ def test_nonfinal_validation_rejects_unseen_or_unsafe_numeric_modes() -> None:
         changed = base.with_value(key, value, authority="forbidden test fixture")
         with pytest.raises(ValueError):
             validate_nonfinal_config(changed)
+
+
+def test_every_nonfinal_runner_config_forces_preprocessing_cache_overwrite() -> None:
+    configs = [
+        *build_baseline_matrix(MODEL_PATH, Path("runs"), 2, 4),
+        *build_rank_matrix(
+            MODEL_PATH,
+            Path("runs"),
+            2,
+            4,
+            5e-4,
+            16,
+            Path("rank8"),
+        ),
+        build_smoke_config(MODEL_PATH, Path("smoke")),
+        build_evaluation_calibration_config(MODEL_PATH, Path("eval"), 4),
+        build_training_calibration_config(MODEL_PATH, Path("train"), 2, 4),
+        build_pilot_config(MODEL_PATH, Path("pilot"), 2, 4),
+    ]
+
+    assert all(config.values["overwrite_cache"] is True for config in configs)
+    assert all(
+        config.runner_payload()["overwrite_cache"] is True for config in configs
+    )
+    assert all(
+        config.authority_by_field["overwrite_cache"]
+        == "permitted resource/configuration accommodation"
+        for config in configs
+    )
+
+
+def test_nonfinal_validation_rejects_reusable_preprocessing_cache() -> None:
+    base = build_baseline_matrix(
+        MODEL_PATH, Path("/ignored/artifacts"), 2, 4
+    )[0]
+
+    changed = base.with_value(
+        "overwrite_cache", False, authority="forbidden test fixture"
+    )
+
+    with pytest.raises(ValueError, match="overwrite_cache"):
+        validate_nonfinal_config(changed)
+
+    values = dict(base.values)
+    authorities = dict(base.authority_by_field)
+    values.pop("overwrite_cache")
+    authorities.pop("overwrite_cache")
+    missing = ResolvedConfig(base.experiment_id, values, authorities)
+
+    with pytest.raises(ValueError, match="overwrite_cache"):
+        validate_nonfinal_config(missing)
 
 
 def test_relative_runner_paths_are_resolved_from_the_project_root(

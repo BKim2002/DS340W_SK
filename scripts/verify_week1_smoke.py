@@ -661,6 +661,8 @@ def verify_week1_smoke(project_root: Path, artifact_root: Path) -> dict[str, Any
 
     project_root = project_root.resolve(strict=True)
     artifact_root = artifact_root.resolve(strict=True)
+    environment_lock_path = project_root / "data/manifests/environment-lock.json"
+    _load_json(environment_lock_path)
     upstream = _verify_provenance(project_root, artifact_root)
     values, configuration = _verify_configuration(project_root, artifact_root)
     source_lock = _load_json(project_root / "data/manifests/source-lock.json")
@@ -676,6 +678,7 @@ def verify_week1_smoke(project_root: Path, artifact_root: Path) -> dict[str, Any
         "artifact_kind": "week1-non-result-smoke",
         "status": "verified",
         "scope_note": "Execution smoke only; these metrics are not a reproduction result.",
+        "environment_lock_sha256": _sha256(environment_lock_path),
         "upstream": upstream,
         "inputs": inputs,
         "configuration": configuration,

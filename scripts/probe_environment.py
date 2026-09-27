@@ -13,6 +13,7 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
+from time import perf_counter_ns
 from typing import Any
 
 
@@ -203,6 +204,7 @@ def _determinism_report(torch: Any) -> dict[str, Any]:
 def probe_environment(project_root: Path = PROJECT_ROOT) -> dict[str, Any]:
     """Return a JSON-serializable report for the current experiment host."""
 
+    probe_started_ns = perf_counter_ns()
     project_root = project_root.resolve(strict=True)
     lockfile = project_root / "requirements.lock"
     if not lockfile.is_file():
@@ -240,7 +242,7 @@ def probe_environment(project_root: Path = PROJECT_ROOT) -> dict[str, Any]:
     determinism = _determinism_report(torch)
     devices, driver_version = _gpu_report(torch)
     release = _os_release()
-    return {
+    report = {
         "schema_version": 1,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "operating_system": {
@@ -280,6 +282,10 @@ def probe_environment(project_root: Path = PROJECT_ROOT) -> dict[str, Any]:
             "sha256": _sha256_file(lockfile),
         },
     }
+    report["probe_wall_seconds"] = max(
+        perf_counter_ns() - probe_started_ns, 1
+    ) / 1_000_000_000
+    return report
 
 
 def _main() -> None:

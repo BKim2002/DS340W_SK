@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import sha256
 import json
 from pathlib import Path
 import subprocess
@@ -13,6 +14,7 @@ from ds340w_repro.run_preflight import (
     run_preflight,
 )
 from ds340w_repro.build_matrix import build_evaluation_calibration_config
+from ds340w_repro.config_schema import ResolvedConfig
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -59,7 +61,7 @@ def test_cli_dry_run_declares_all_three_preflight_phases(tmp_path: Path) -> None
     }
 
 
-def test_cli_can_deduplicate_confirmations_when_rank_eight_is_selected(
+def test_cli_rejects_a_projection_that_deduplicates_confirmations_before_selection(
     tmp_path: Path,
 ) -> None:
     completed = subprocess.run(
@@ -82,11 +84,8 @@ def test_cli_can_deduplicate_confirmations_when_rank_eight_is_selected(
         text=True,
     )
 
-    assert completed.returncode == 0, completed.stderr
-    plan = json.loads(completed.stdout)["retained_run_plan"]
-    assert plan["training_runs"] == 11
-    assert plan["stages"][-1]["name"] == "confirmation"
-    assert plan["stages"][-1]["training_runs"] == 2
+    assert completed.returncode == 2
+    assert "invalid choice: 2" in completed.stderr
 
 
 def test_evaluation_calibration_counts_the_measured_samples(
@@ -136,7 +135,11 @@ def test_preflight_orchestrates_fresh_attempts_and_writes_baseline_gate(
         minimum_free = 900.0
         oom = False
         if config.experiment_id == "preflight-eval-eb32":
-            returncode, minimum_free, oom = 1, 100.0, True
+            minimum_free = 100.0
+            (output_dir / "eval_results.json").write_text(
+                '{"eval_runtime": 5.0, "eval_samples_per_second": 87.2}\n',
+                encoding="utf-8",
+            )
         elif config.experiment_id == "preflight-eval-eb16":
             (output_dir / "eval_results.json").write_text(
                 '{"eval_runtime": 5.0, "eval_samples_per_second": 87.2}\n',
@@ -200,10 +203,40 @@ def test_preflight_orchestrates_fresh_attempts_and_writes_baseline_gate(
     assert json.loads(gate_path.read_text(encoding="utf-8")) == manifest
 
     selected_baseline = sorted((config_root / "baseline").glob("*.json"))[0]
+    selected_config = ResolvedConfig.from_json(
+        selected_baseline.read_text(encoding="utf-8")
+    )
+    checkpoint_root = tmp_path / "selected-rank8"
+    checkpoint_root.mkdir()
+    checkpoint_bytes = b"test checkpoint"
+    (checkpoint_root / "pytorch_model.bin").write_bytes(checkpoint_bytes)
+    checkpoint_digest = sha256()
+    checkpoint_digest.update(b"pytorch_model.bin\0")
+    checkpoint_digest.update(checkpoint_bytes)
+    checkpoint_digest.update(b"\0")
+    selection_path = tmp_path / "baseline-selection.json"
+    selection_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "artifact_kind": "baseline-selection",
+                "status": "verified",
+                "completed_config_sha256": manifest["authorization"]["baseline"][
+                    "config_sha256"
+                ],
+                "selected_config_sha256": selected_config.sha256,
+                "selected_checkpoint_path": str(checkpoint_root.resolve()),
+                "selected_checkpoint_sha256": checkpoint_digest.hexdigest(),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     updated = authorize_rank_configs(
         gate_manifest_path=gate_path,
+        baseline_selection_manifest_path=selection_path,
         selected_baseline_config_path=selected_baseline,
-        rank_eight_checkpoint=Path("artifacts/selected-rank8"),
+        rank_eight_checkpoint=checkpoint_root,
         resolved_config_root=config_root,
         retained_output_root=Path("artifacts/runs"),
     )
@@ -212,4 +245,97 @@ def test_preflight_orchestrates_fresh_attempts_and_writes_baseline_gate(
     assert [path.stem for path in rank_paths] == ["rank-r16", "rank-r2", "rank-r4"]
     assert updated["authorization"]["rank"]["authorized"] is True
     assert len(updated["authorization"]["rank"]["config_sha256"]) == 3
+
+
+def _run_preflight_with_executor(tmp_path: Path, execute_config):
+    return run_preflight(
+        project_root=PROJECT_ROOT,
+        model_path=Path("/verified/model"),
+        workspace=tmp_path / "workspace",
+        python_executable=Path(sys.executable),
+        gate_manifest_path=tmp_path / "compute-gate.json",
+        resolved_config_root=tmp_path / "resolved",
+        retained_output_root=Path("artifacts/runs"),
+        retained_run_plan=DEFAULT_RETAINED_RUN_PLAN,
+        execute_config=execute_config,
+    )
+
+
+def _observed(output_dir: Path, *, returncode: int = 0) -> ObservedRun:
+    return ObservedRun(
+        returncode=returncode,
+        started_at_utc="2026-09-07T00:00:00+00:00",
+        finished_at_utc="2026-09-07T00:01:00+00:00",
+        wall_seconds=60.0,
+        minimum_free_memory_mib=900.0,
+        oom=False,
+        output_dir=output_dir,
+    )
+
+
+def test_evaluation_calibration_does_not_downshift_after_wrong_sample_count(
+    tmp_path: Path,
+) -> None:
+    attempted: list[str] = []
+
+    def execute_config(*, config, **_kwargs) -> ObservedRun:
+        attempted.append(config.experiment_id)
+        output_dir = Path(config.values["output_dir"])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "eval_results.json").write_text(
+            '{"eval_runtime": 5.0, "eval_samples_per_second": 0.2}\n',
+            encoding="utf-8",
+        )
+        return _observed(output_dir)
+
+    manifest = _run_preflight_with_executor(tmp_path, execute_config)
+
+    assert attempted == ["preflight-eval-eb32"]
+    assert manifest["decision"]["status"] == "STOP"
+
+
+def test_evaluation_calibration_does_not_downshift_after_non_oom_exit(
+    tmp_path: Path,
+) -> None:
+    attempted: list[str] = []
+
+    def execute_config(*, config, **_kwargs) -> ObservedRun:
+        attempted.append(config.experiment_id)
+        output_dir = Path(config.values["output_dir"])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        return _observed(output_dir, returncode=3)
+
+    manifest = _run_preflight_with_executor(tmp_path, execute_config)
+
+    assert attempted == ["preflight-eval-eb32"]
+    assert manifest["decision"]["status"] == "STOP"
+
+
+def test_training_calibration_does_not_downshift_after_incomplete_steps(
+    tmp_path: Path,
+) -> None:
+    attempted: list[str] = []
+
+    def execute_config(*, config, **_kwargs) -> ObservedRun:
+        attempted.append(config.experiment_id)
+        output_dir = Path(config.values["output_dir"])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        if config.experiment_id.startswith("preflight-eval"):
+            (output_dir / "eval_results.json").write_text(
+                '{"eval_runtime": 5.0, "eval_samples_per_second": 87.2}\n',
+                encoding="utf-8",
+            )
+        else:
+            (output_dir / "trainer_state.json").write_text(
+                '{"global_step": 9}\n', encoding="utf-8"
+            )
+        return _observed(output_dir)
+
+    manifest = _run_preflight_with_executor(tmp_path, execute_config)
+
+    assert attempted == [
+        "preflight-eval-eb32",
+        "preflight-train-pb8-eb32",
+    ]
+    assert manifest["decision"]["status"] == "STOP"
 

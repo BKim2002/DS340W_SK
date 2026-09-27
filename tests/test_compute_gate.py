@@ -9,6 +9,7 @@ import pytest
 from ds340w_repro.preflight import (
     CalibrationAttempt,
     ComputeGateError,
+    DEFAULT_RETAINED_RUN_PLAN,
     EvaluationBatchAttempt,
     HardwareEvidence,
     PilotEvidence,
@@ -31,16 +32,19 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 def _hardware() -> HardwareEvidence:
     return HardwareEvidence(
+        source_manifest_sha256="f" * 64,
         gpu_name="NVIDIA GeForce RTX 4060",
         total_memory_mib=8_188,
         driver_version="616.92",
         cuda_available=True,
+        probe_wall_seconds=2.5,
     )
 
 
 def _smoke() -> Week1SmokeEvidence:
     return Week1SmokeEvidence(
         source_manifest_sha256=SHA,
+        environment_lock_sha256="f" * 64,
         resolved_config_sha256="b" * 64,
         completed_at_utc="2026-09-06T16:19:56.408943+00:00",
         exit_status=0,
@@ -85,6 +89,33 @@ def test_projection_uses_the_predeclared_conservative_formula() -> None:
 
     expected = 600.0 + 1.20 * (9 * (20_000 * 0.5 + 200 * 30.0) + 2 * 30.0)
     assert projection == pytest.approx(expected)
+
+
+def test_default_retained_plan_reserves_the_thirteen_run_worst_case() -> None:
+    assert DEFAULT_RETAINED_RUN_PLAN.to_dict() == {
+        "stages": [
+            {
+                "name": "baseline",
+                "training_runs": 6,
+                "optimizer_steps_per_run": 20_000,
+                "evaluations_per_run": 200,
+            },
+            {
+                "name": "rank",
+                "training_runs": 3,
+                "optimizer_steps_per_run": 20_000,
+                "evaluations_per_run": 200,
+            },
+            {
+                "name": "confirmation",
+                "training_runs": 4,
+                "optimizer_steps_per_run": 20_000,
+                "evaluations_per_run": 200,
+            },
+        ],
+        "training_runs": 13,
+        "final_evaluations": 2,
+    }
 
 
 def test_projection_expands_from_the_declared_run_plan() -> None:
@@ -214,7 +245,7 @@ def test_complete_measured_evidence_under_the_cap_authorizes_the_grid() -> None:
     assert manifest["evaluation_batch_calibration"]["selected_evaluation_batch_size"] == 16
     assert manifest["pilot"]["seconds_per_optimizer_step"] == pytest.approx(0.1)
     assert manifest["pilot"]["full_test_evaluation_seconds"] == pytest.approx(5.0)
-    assert manifest["projection"]["projected_seconds"] == pytest.approx(33_012.0)
+    assert manifest["projection"]["projected_seconds"] == pytest.approx(47_412.0)
     assert manifest["projection"]["status"] == "WITHIN_CAP"
     assert manifest["decision"] == {
         "reasons": [],
@@ -298,10 +329,71 @@ def test_projection_above_48_gpu_hours_stops_retained_training() -> None:
         ),
     )
 
-    assert manifest["projection"]["projected_seconds"] == pytest.approx(173_472.0)
+    assert manifest["projection"]["projected_seconds"] == pytest.approx(250_272.0)
     assert manifest["projection"]["status"] == "OVER_CAP"
     assert manifest["decision"] == {
         "reasons": ["projected_time_exceeds_48_gpu_hour_cap"],
+        "retained_training_authorized": False,
+        "status": "STOP",
+    }
+
+
+def test_nine_run_projection_cannot_authorize_retained_training() -> None:
+    incomplete_plan = RetainedRunPlan(
+        stages=(
+            RetainedRunStage("baseline", training_runs=6),
+            RetainedRunStage("rank", training_runs=3),
+        ),
+        final_evaluations=2,
+    )
+    manifest = build_compute_gate_manifest(
+        hardware=_hardware(),
+        smoke=_smoke(),
+        evaluation_batch_attempts=(_evaluation_attempt(),),
+        calibration_attempts=(
+            CalibrationAttempt(
+                physical_batch_size=8,
+                config_sha256="c" * 64,
+                started_at_utc="2026-09-07T00:00:00+00:00",
+                finished_at_utc="2026-09-07T00:02:00+00:00",
+                fresh_process=True,
+                rank=16,
+                lora_alpha=32,
+                effective_batch_size=32,
+                target_optimizer_steps=10,
+                completed_optimizer_steps=10,
+                exit_status=0,
+                oom=False,
+                minimum_free_memory_mib=700.0,
+            ),
+        ),
+        pilot=PilotEvidence(
+            config_sha256="e" * 64,
+            started_at_utc="2026-09-07T00:05:00+00:00",
+            finished_at_utc="2026-09-07T00:20:00+00:00",
+            fresh_process=True,
+            physical_batch_size=8,
+            rank=16,
+            lora_alpha=32,
+            effective_batch_size=32,
+            learning_rate=1e-3,
+            optimizer_steps=200,
+            warmup_steps_excluded=20,
+            non_evaluation_seconds_steps_21_to_200=18.0,
+            full_test_evaluation_seconds=(5.0, 4.5),
+            do_test=False,
+            exit_status=0,
+            evaluation_batch_size=32,
+        ),
+        actual_preflight_seconds=600.0,
+        baseline_config_sha256=tuple(
+            f"{number:064x}" for number in range(1, 7)
+        ),
+        retained_run_plan=incomplete_plan,
+    )
+
+    assert manifest["decision"] == {
+        "reasons": ["retained_run_plan_incomplete"],
         "retained_training_authorized": False,
         "status": "STOP",
     }

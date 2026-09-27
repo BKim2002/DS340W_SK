@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from hashlib import sha256
 import json
 import math
 from pathlib import Path
@@ -25,11 +26,11 @@ from ds340w_repro.preflight import (
     CALIBRATION_BATCH_CANDIDATES,
     DEFAULT_RETAINED_RUN_PLAN,
     EVALUATION_BATCH_CANDIDATES,
+    MINIMUM_FREE_MEMORY_MIB,
     CalibrationAttempt,
     EvaluationBatchAttempt,
     PilotEvidence,
     RetainedRunPlan,
-    RetainedRunStage,
     authorize_rank_stage,
     build_compute_gate_manifest,
     load_week1_evidence,
@@ -277,17 +278,11 @@ def _pilot_evidence(config: ResolvedConfig, observed: ObservedRun) -> PilotEvide
 
 
 def _retained_plan(confirmation_runs: int) -> RetainedRunPlan:
-    if confirmation_runs < 0:
-        raise ValueError("Confirmation run count must be non-negative")
-    stages = list(DEFAULT_RETAINED_RUN_PLAN.stages)
-    if confirmation_runs:
-        stages.append(
-            RetainedRunStage("confirmation", training_runs=confirmation_runs)
+    if confirmation_runs != 4:
+        raise ValueError(
+            "Preflight must reserve four confirmation runs for the 13-run worst case"
         )
-    return RetainedRunPlan(
-        stages=tuple(stages),
-        final_evaluations=DEFAULT_RETAINED_RUN_PLAN.final_evaluations,
-    )
+    return DEFAULT_RETAINED_RUN_PLAN
 
 
 def run_preflight(
@@ -333,6 +328,11 @@ def run_preflight(
         if attempt.passed:
             selected_evaluation_batch = candidate
             break
+        if not (
+            attempt.oom
+            or attempt.minimum_free_memory_mib < MINIMUM_FREE_MEMORY_MIB
+        ):
+            break
 
     calibration_attempts: list[CalibrationAttempt] = []
     selected_physical_batch: int | None = None
@@ -358,6 +358,11 @@ def run_preflight(
             calibration_attempts.append(attempt)
             if attempt.passed:
                 selected_physical_batch = candidate
+                break
+            if not (
+                attempt.oom
+                or attempt.minimum_free_memory_mib < MINIMUM_FREE_MEMORY_MIB
+            ):
                 break
 
     pilot: PilotEvidence | None = None
@@ -398,7 +403,10 @@ def run_preflight(
         calibration_attempts=calibration_attempts,
         pilot=pilot,
         actual_preflight_seconds=(
-            smoke.wall_seconds + time.perf_counter() - preflight_started
+            hardware.probe_wall_seconds
+            + smoke.wall_seconds
+            + time.perf_counter()
+            - preflight_started
         ),
         baseline_config_sha256=tuple(config.sha256 for config in baseline_configs),
         retained_run_plan=retained_run_plan,
@@ -418,6 +426,7 @@ def run_preflight(
 def authorize_rank_configs(
     *,
     gate_manifest_path: Path,
+    baseline_selection_manifest_path: Path,
     selected_baseline_config_path: Path,
     rank_eight_checkpoint: Path,
     resolved_config_root: Path,
@@ -426,6 +435,7 @@ def authorize_rank_configs(
     """Derive and authorize ranks 2/4/16 from one authorized baseline config."""
 
     manifest = _read_json_object(gate_manifest_path)
+    selection = _read_json_object(baseline_selection_manifest_path)
     selected = ResolvedConfig.from_json(
         selected_baseline_config_path.read_text(encoding="utf-8")
     )
@@ -437,6 +447,66 @@ def authorize_rank_configs(
     if not selected.experiment_id.startswith("baseline-r8-"):
         raise PreflightExecutionError(
             "Rank authorization requires an authorized rank-8 baseline config"
+        )
+    baseline_authorization = manifest["authorization"]["baseline"]
+    completed_hashes = selection.get("completed_config_sha256")
+    selected_checkpoint_path = selection.get("selected_checkpoint_path")
+    selected_checkpoint_sha256 = selection.get("selected_checkpoint_sha256")
+    if (
+        selection.get("schema_version") != 1
+        or selection.get("artifact_kind") != "baseline-selection"
+        or selection.get("status") != "verified"
+        or not isinstance(completed_hashes, list)
+        or len(completed_hashes) != 6
+        or set(completed_hashes)
+        != set(baseline_authorization["config_sha256"])
+        or selection.get("selected_config_sha256") != selected.sha256
+        or not isinstance(selected_checkpoint_path, str)
+        or not isinstance(selected_checkpoint_sha256, str)
+        or len(selected_checkpoint_sha256) != 64
+        or any(
+            character not in "0123456789abcdef"
+            for character in selected_checkpoint_sha256
+        )
+        or not Path(selected_checkpoint_path).is_absolute()
+    ):
+        raise PreflightExecutionError(
+            "Rank authorization requires complete verified baseline-selection evidence"
+        )
+    try:
+        checkpoint_root = rank_eight_checkpoint.resolve(strict=True)
+    except FileNotFoundError as error:
+        raise PreflightExecutionError(
+            "Selected rank-8 checkpoint does not exist"
+        ) from error
+    if not checkpoint_root.is_dir():
+        raise PreflightExecutionError(
+            "Selected rank-8 checkpoint must be an artifact directory"
+        )
+    if Path(selected_checkpoint_path).resolve() != checkpoint_root:
+        raise PreflightExecutionError(
+            "Baseline-selection checkpoint path does not match the requested artifact"
+        )
+    checkpoint_digest = sha256()
+    checkpoint_files = sorted(
+        path for path in checkpoint_root.rglob("*") if path.is_file()
+    )
+    if not checkpoint_files:
+        raise PreflightExecutionError("Selected rank-8 checkpoint is empty")
+    for path in checkpoint_files:
+        if path.is_symlink():
+            raise PreflightExecutionError(
+                "Selected rank-8 checkpoint may not contain symbolic links"
+            )
+        checkpoint_digest.update(
+            path.relative_to(checkpoint_root).as_posix().encode("utf-8")
+        )
+        checkpoint_digest.update(b"\0")
+        checkpoint_digest.update(path.read_bytes())
+        checkpoint_digest.update(b"\0")
+    if checkpoint_digest.hexdigest() != selected_checkpoint_sha256:
+        raise PreflightExecutionError(
+            "Selected rank-8 checkpoint hash does not match baseline selection"
         )
     rank_matrix = build_rank_matrix(
         Path(str(selected.values["model_name_or_path"])),
@@ -484,6 +554,7 @@ def _main() -> None:
     parser.add_argument(
         "--confirmation-runs",
         type=int,
+        choices=(4,),
         default=4,
         help=(
             "Additional retained runs reserved for three-seed confirmation. "

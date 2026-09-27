@@ -49,6 +49,7 @@ def _make_valid_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     artifact = tmp_path / "private-machine" / "smoke-output"
     runtime = tmp_path / "private-machine" / "runtime"
     output = project / "data" / "manifests" / "week1-smoke.json"
+    project_git_commit = "d" * 40
 
     pristine_runner = project / "vendor" / "OpenDelta" / RUNNER_RELATIVE_PATH
     pristine_runner.parent.mkdir(parents=True)
@@ -131,11 +132,19 @@ def _make_valid_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
         course_data_manifest_path,
         {"schema_version": 1, "partitions": ["Training", "Test"]},
     )
+    _write_json(
+        project / "data" / "manifests" / "environment-lock.json",
+        {
+            "schema_version": 1,
+            "git": {"project": {"commit": project_git_commit}},
+        },
+    )
 
     values = {
         "model_name_or_path": "verified-model",
         "tokenizer_name": "verified-model",
         "output_dir": str(artifact),
+        "overwrite_cache": True,
         "do_train": True,
         "do_eval": True,
         "do_test": False,
@@ -192,7 +201,6 @@ def _make_valid_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
         "verified": True,
         "visible_partitions": ["Training", "Test"],
     }
-    project_git_commit = "d" * 40
     _write_json(
         artifact / "execution-tree.json",
         {
@@ -350,6 +358,9 @@ def test_cli_verifies_smoke_and_writes_sanitized_manifest(tmp_path: Path) -> Non
     manifest = json.loads(output.read_text(encoding="utf-8"))
     assert manifest["status"] == "verified"
     assert manifest["artifact_kind"] == "week1-non-result-smoke"
+    assert manifest["environment_lock_sha256"] == _digest(
+        project / "data" / "manifests" / "environment-lock.json"
+    )
     assert manifest["training"]["global_step"] == 1
     assert manifest["evaluation"]["generation_path_exercised"] is True
     assert manifest["trainable_parameters"] == {
@@ -364,6 +375,10 @@ def test_cli_verifies_smoke_and_writes_sanitized_manifest(tmp_path: Path) -> Non
         manifest["data_access"]["final_unseen_file_exposed_to_child"] is False
     )
     assert manifest["configuration"]["runner_payload_matches_resolved_config"] is True
+    runner_payload = json.loads(
+        (artifact / "runner-config.json").read_text(encoding="utf-8")
+    )
+    assert runner_payload["overwrite_cache"] is True
     assert manifest["configuration"]["effective_model_dropout"] == 0.0
     assert manifest["configuration"]["source_lock_sha256"] == _digest(
         project / "data" / "manifests" / "source-lock.json"

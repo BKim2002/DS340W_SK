@@ -165,6 +165,7 @@ def validate_nonfinal_config(config: ResolvedConfig) -> None:
         "seed": 42,
         "data_seed": 42,
         "data_sample_seed": 42,
+        "overwrite_cache": True,
         "fp16": False,
         "bf16": False,
         "tf32": False,

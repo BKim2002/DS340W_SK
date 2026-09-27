@@ -87,9 +87,16 @@ DEFAULT_RETAINED_RUN_PLAN = RetainedRunPlan(
     stages=(
         RetainedRunStage("baseline", training_runs=6),
         RetainedRunStage("rank", training_runs=3),
+        RetainedRunStage("confirmation", training_runs=4),
     ),
     final_evaluations=FINAL_EVALUATIONS,
 )
+
+
+def _retained_plan_is_conservative(plan: RetainedRunPlan) -> bool:
+    """Return whether a plan reserves the approved 13-run worst case exactly."""
+
+    return plan == DEFAULT_RETAINED_RUN_PLAN
 
 
 def _valid_sha256(value: str) -> bool:
@@ -191,18 +198,27 @@ def validated_preflight_phase(config: Any) -> str | None:
 class HardwareEvidence:
     """The one CUDA device on which preflight evidence was collected."""
 
+    source_manifest_sha256: str
     gpu_name: str
     total_memory_mib: int
     driver_version: str
     cuda_available: bool
+    probe_wall_seconds: float
 
     def __post_init__(self) -> None:
+        if not _valid_sha256(self.source_manifest_sha256):
+            raise ValueError(
+                "Environment manifest checksum must be a lowercase SHA-256"
+            )
         if not self.gpu_name or not self.driver_version:
             raise ValueError("GPU name and driver version must be non-empty")
         if type(self.total_memory_mib) is not int or self.total_memory_mib <= 0:
             raise ValueError("Total GPU memory must be a positive integer MiB value")
         if type(self.cuda_available) is not bool:
             raise TypeError("CUDA availability must be boolean")
+        _require_finite_nonnegative(
+            self.probe_wall_seconds, "Environment probe wall seconds"
+        )
 
 
 @dataclass(frozen=True)
@@ -210,6 +226,7 @@ class Week1SmokeEvidence:
     """Sanitized evidence from the verified one-step Week 1 smoke run."""
 
     source_manifest_sha256: str
+    environment_lock_sha256: str
     resolved_config_sha256: str
     completed_at_utc: str
     exit_status: int
@@ -224,6 +241,10 @@ class Week1SmokeEvidence:
     def __post_init__(self) -> None:
         if not _valid_sha256(self.source_manifest_sha256):
             raise ValueError("Smoke manifest checksum must be a lowercase SHA-256")
+        if not _valid_sha256(self.environment_lock_sha256):
+            raise ValueError(
+                "Smoke environment checksum must be a lowercase SHA-256"
+            )
         if not _valid_sha256(self.resolved_config_sha256):
             raise ValueError("Smoke configuration checksum must be a lowercase SHA-256")
         if not self.completed_at_utc:
@@ -655,6 +676,8 @@ def build_compute_gate_manifest(
         reasons.append("approved_projection_unavailable")
     if not baseline_hashes_complete:
         reasons.append("baseline_configuration_hashes_missing")
+    if not _retained_plan_is_conservative(retained_run_plan):
+        reasons.append("retained_run_plan_incomplete")
     if projected_seconds is not None and projected_seconds > GPU_TIME_CAP_SECONDS:
         reasons.append("projected_time_exceeds_48_gpu_hour_cap")
     baseline_authorized = not reasons
@@ -690,9 +713,11 @@ def build_compute_gate_manifest(
             else (smoke.completed_at_utc if smoke is not None else None)
         ),
         "hardware": {
+            "source_manifest_sha256": hardware.source_manifest_sha256,
             "cuda_available": hardware.cuda_available,
             "driver_version": hardware.driver_version,
             "gpu_name": hardware.gpu_name,
+            "probe_wall_seconds": hardware.probe_wall_seconds,
             "total_memory_mib": hardware.total_memory_mib,
             "compatibility": (
                 (
@@ -711,6 +736,9 @@ def build_compute_gate_manifest(
             "source_manifest_sha256": (
                 smoke.source_manifest_sha256 if smoke is not None else None
             ),
+            "environment_lock_sha256": (
+                smoke.environment_lock_sha256 if smoke is not None else None
+            ),
             "resolved_config_sha256": (
                 smoke.resolved_config_sha256 if smoke is not None else None
             ),
@@ -721,7 +749,9 @@ def build_compute_gate_manifest(
             ),
             "wall_seconds": smoke.wall_seconds if smoke is not None else None,
             "observed_preflight_seconds_lower_bound": (
-                smoke.wall_seconds if smoke is not None else None
+                hardware.probe_wall_seconds + smoke.wall_seconds
+                if smoke is not None
+                else None
             ),
             "scope": "one-step non-result viability evidence",
         },
@@ -836,7 +866,14 @@ def load_week1_evidence(
 ) -> tuple[HardwareEvidence, Week1SmokeEvidence]:
     """Load only the locked, sanitized fields needed by the Week 1 gate."""
 
-    environment = _load_json_object(environment_manifest_path)
+    environment_manifest_bytes = environment_manifest_path.read_bytes()
+    try:
+        environment = json.loads(environment_manifest_bytes)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ValueError("Environment manifest is not valid UTF-8 JSON") from error
+    if not isinstance(environment, dict):
+        raise ValueError("Environment manifest must contain a JSON object")
+    environment_manifest_sha256 = sha256(environment_manifest_bytes).hexdigest()
     smoke_manifest_bytes = smoke_manifest_path.read_bytes()
     try:
         smoke = json.loads(smoke_manifest_bytes)
@@ -850,10 +887,12 @@ def load_week1_evidence(
             raise ValueError("Environment manifest must identify exactly one GPU")
         device = devices[0]
         hardware = HardwareEvidence(
+            source_manifest_sha256=environment_manifest_sha256,
             gpu_name=device["name"],
             total_memory_mib=device["memory_total_mib"],
             driver_version=environment["nvidia"]["driver_version"],
             cuda_available=environment["pytorch"]["cuda_available"],
+            probe_wall_seconds=environment["probe_wall_seconds"],
         )
         precision = environment["precision_policy"]
         used_fp32 = (
@@ -864,6 +903,7 @@ def load_week1_evidence(
         )
         smoke_evidence = Week1SmokeEvidence(
             source_manifest_sha256=sha256(smoke_manifest_bytes).hexdigest(),
+            environment_lock_sha256=smoke["environment_lock_sha256"],
             resolved_config_sha256=smoke["configuration"][
                 "resolved_config_sha256"
             ],
@@ -890,6 +930,7 @@ def load_week1_evidence(
         or smoke.get("schema_version") != 1
         or smoke.get("status") != "verified"
         or smoke.get("artifact_kind") != "week1-non-result-smoke"
+        or smoke.get("environment_lock_sha256") != environment_manifest_sha256
         or smoke.get("evidence_gaps") != []
         or smoke.get("configuration", {}).get("max_steps") != 1
         or smoke.get("configuration", {}).get("rank") != 8
@@ -1064,17 +1105,13 @@ def _projection_plan_is_complete(projection: Mapping[str, Any]) -> bool:
         ):
             return False
         stage_specs[name] = (runs, steps, evaluations)
-    baseline = stage_specs.get("baseline")
-    rank = stage_specs.get("rank")
+    expected = {
+        "baseline": (6, OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN),
+        "rank": (3, OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN),
+        "confirmation": (4, OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN),
+    }
     return (
-        baseline is not None
-        and baseline[0] >= 6
-        and baseline[1:] == (OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN)
-        and rank is not None
-        and rank[0] >= 3
-        and rank[1:] == (OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN)
-        and plan.get("training_runs")
-        == sum(specification[0] for specification in stage_specs.values())
-        and type(plan.get("final_evaluations")) is int
-        and plan["final_evaluations"] >= 0
+        stage_specs == expected
+        and plan.get("training_runs") == 13
+        and plan.get("final_evaluations") == FINAL_EVALUATIONS
     )
