@@ -67,6 +67,7 @@ def test_patches_apply_to_a_disposable_tree_only(tmp_path: Path) -> None:
     assert "DS340W_SST2_TEST_FILE" in patched_tasks
     assert "datasets.load_dataset('json'" in patched_tasks
     assert "SST2 course-data files were not provided" in patched_tasks
+    assert "load_from_cache_file=False" in patched_tasks
     assert "if training_args.do_test:" in patched_runner
     assert 'data_info["test"]' in patched_runner
     assert "repo_name = create_hub_repo_name(" not in patched_runner

@@ -25,7 +25,20 @@
     "status": "STOP"
   },
   "evaluation_batch_calibration": {
-    "attempts": [],
+    "attempts": [
+      {
+        "config_sha256": "4c2a1409bf3a76ad5c4592e259b724719613c2a16d90694ba1959034c2da15fa",
+        "evaluated_samples": 1,
+        "evaluation_batch_size": 32,
+        "exit_status": 0,
+        "finished_at_utc": "2026-09-27T01:31:30.836085+00:00",
+        "fresh_process": true,
+        "minimum_free_memory_mib": 5689.0,
+        "oom": false,
+        "passed": false,
+        "started_at_utc": "2026-09-27T01:31:04.053531+00:00"
+      }
+    ],
     "complete": false,
     "minimum_free_memory_mib": 512,
     "required_batch_candidates": [

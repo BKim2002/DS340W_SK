@@ -9,7 +9,7 @@ diff --git a/examples/legacies/examples_seq2seq/data_processors/tasks.py b/examp
  from typing import Callable, List, Mapping
  from examples_seq2seq.trainers.trainer_utils import pad_punctuation
  from examples_seq2seq.metrics import metrics
-@@ -182,8 +183,17 @@ class SST2(AbstractTask):
+@@ -182,8 +183,24 @@ class SST2(AbstractTask):
                             "test": "validation"}
  
      def load_dataset(self, split):
@@ -26,6 +26,13 @@ diff --git a/examples/legacies/examples_seq2seq/data_processors/tasks.py b/examp
 +        return datasets.load_dataset('json',
 +                                     data_files=data_files,
 +                                     split=split)
++
++    def map_dataset(self, dataset, add_prefix):
++        return dataset.map(
++            functools.partial(self.preprocessor, add_prefix=add_prefix),
++            remove_columns=dataset.column_names,
++            load_from_cache_file=False,
++        )
  
      def preprocessor(self, example, add_prefix=True):
          src_texts = ["sentence:", example['sentence']]

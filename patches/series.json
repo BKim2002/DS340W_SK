@@ -4,9 +4,9 @@
   "patches": [
     {
       "path": "patches/0001-pin-sst2-loader.patch",
-      "sha256": "31cf077bed73d9b50c9c4d33651e38a8d5db3a6bf95bc81ce53d8fe4da1e8643",
+      "sha256": "df8f3d60424a3885516942e83aa2a84bb58a25b7a4f8235f2fae58e42d63477a",
       "classification": "data-handling",
-      "rationale": "Route SST-2 through verified external Training/Test files so non-final runs cannot load final-unseen rows.",
+      "rationale": "Route SST-2 through verified external Training/Test files and recompute its preprocessing so non-final runs cannot load final-unseen rows or a stale subset cache.",
       "touched_paths": [
         "examples/legacies/examples_seq2seq/data_processors/tasks.py"
       ]
