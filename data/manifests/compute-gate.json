@@ -25,20 +25,7 @@
     "status": "STOP"
   },
   "evaluation_batch_calibration": {
-    "attempts": [
-      {
-        "config_sha256": "4c2a1409bf3a76ad5c4592e259b724719613c2a16d90694ba1959034c2da15fa",
-        "evaluated_samples": 1,
-        "evaluation_batch_size": 32,
-        "exit_status": 0,
-        "finished_at_utc": "2026-09-27T01:31:30.836085+00:00",
-        "fresh_process": true,
-        "minimum_free_memory_mib": 5689.0,
-        "oom": false,
-        "passed": false,
-        "started_at_utc": "2026-09-27T01:31:04.053531+00:00"
-      }
-    ],
+    "attempts": [],
     "complete": false,
     "minimum_free_memory_mib": 512,
     "required_batch_candidates": [
@@ -51,7 +38,7 @@
     ],
     "selected_evaluation_batch_size": null
   },
-  "evidence_cutoff_utc": "2026-09-27T01:28:32.606164+00:00",
+  "evidence_cutoff_utc": "2026-09-27T01:38:01.658521+00:00",
   "hardware": {
     "compatibility": "WEEK1_SMOKE_ONLY",
     "cuda_available": true,
@@ -121,15 +108,15 @@
   },
   "schema_version": 2,
   "week1_smoke": {
-    "completed_at_utc": "2026-09-27T01:28:32.606164+00:00",
+    "completed_at_utc": "2026-09-27T01:38:01.658521+00:00",
     "environment_lock_sha256": "6dee7a18ad3e8d721b9e3c454a606d8a21d93e6917ffe79523f2c5a69eb1ce14",
-    "observed_preflight_seconds_lower_bound": 21.140332562999998,
+    "observed_preflight_seconds_lower_bound": 21.05715818600002,
     "optimizer_steps": 1,
-    "resolved_config_sha256": "dcea78a46ff67b650a850d9acf40a1aa135ad55b89a62161d6415797bcb5cff4",
+    "resolved_config_sha256": "02e76337084a6dee78cf20cd17f3b39dd26897568601a4f3998aeefb6297d9cd",
     "scope": "one-step non-result viability evidence",
-    "source_manifest_sha256": "ab181e29c8f2d1b9db72857e6f0c2d5876c22f5943b076d9be47724c49a4aade",
+    "source_manifest_sha256": "f267da4e86724bd5b33a9c74c8a37ccf5ebcb597c5c3759fe4dc318e1cbe479d",
     "upstream_peak_memory_gb": 0.979419921875,
     "verified": true,
-    "wall_seconds": 18.000850711
+    "wall_seconds": 17.91767633400002
   }
 }

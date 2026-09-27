@@ -4,61 +4,61 @@
     {
       "relative_path": "resolved-config.json",
       "role": "resolved-config",
-      "sha256": "dcea78a46ff67b650a850d9acf40a1aa135ad55b89a62161d6415797bcb5cff4",
-      "size_bytes": 6954
+      "sha256": "02e76337084a6dee78cf20cd17f3b39dd26897568601a4f3998aeefb6297d9cd",
+      "size_bytes": 6955
     },
     {
       "relative_path": "runner-config.json",
       "role": "original-runner-config",
-      "sha256": "e6358516c76072a3ff9af00c1158d0f48bcfb9300ef162b4051c6607601ffb41",
-      "size_bytes": 2355
+      "sha256": "2f31407b3f69c56af077d25a423fed9d4a0b9d5624fa49b42376a5331c39558c",
+      "size_bytes": 2356
     },
     {
       "relative_path": "execution-tree.json",
       "role": "source-provenance",
-      "sha256": "7f117da8441771bc0da4002da5ff2a4f7744905c90c1205096be76ac12cc8791",
-      "size_bytes": 1692
+      "sha256": "0a2d517eb9d840895cc5b10e4b4df6b0b2cfb116d8f631c69d0f8396f9ffe65e",
+      "size_bytes": 1710
     },
     {
       "relative_path": "process-result.json",
       "role": "process-completion",
-      "sha256": "73eca43ac3417f15759673bf9a58b81dee243696eb01c9e1c463725fe960f896",
-      "size_bytes": 1326
+      "sha256": "896239beb8564345f594cf89b4340852ccb52af1f075fb903773995cc603288f",
+      "size_bytes": 1331
     },
     {
       "relative_path": "train_results.json",
       "role": "training-metrics",
-      "sha256": "2eeee6c9928b97b7dd9eb6f7190d68b7893877b45e791ace796445d8d21b3967",
+      "sha256": "09754c06a5dba080246919a3d9e5f0ec0bec968eaa1d10c5e76e3d9d2d01dda1",
       "size_bytes": 187
     },
     {
       "relative_path": "eval_results.json",
       "role": "generated-evaluation-metrics",
-      "sha256": "309fd3a0a5e9b0e1f0f461ca216e35b67bee912b30501590b58dae8ec610d2d8",
+      "sha256": "b45246fbe4d899f4ebd659168254860a2b2abe157a2c7a84639273da3c7446c6",
       "size_bytes": 181
     },
     {
       "relative_path": "performance_results.json",
       "role": "runtime-memory-metrics",
-      "sha256": "18800182ef2e930a09ba8702bcaa6e928f1cb50f8c8345c7646ef6f4e28ec00f",
-      "size_bytes": 88
+      "sha256": "92d29b7ddca7f07fc5e75418e5cd28d9030be2ed9bc0a580f4fcd8599ba3a1c5",
+      "size_bytes": 85
     },
     {
       "relative_path": "all_results.json",
       "role": "combined-metrics",
-      "sha256": "2a7e91c7b746c3f75f068902e4c63a1b61f50c0df0623d8e81df6bc143b87a68",
-      "size_bytes": 434
+      "sha256": "7d7b9c05864fa7d27f83462d5ad5b69b26eb1f9cf1d7b37da9a98b80a31d0ecf",
+      "size_bytes": 431
     },
     {
       "relative_path": "trainer_state.json",
       "role": "final-trainer-state",
-      "sha256": "65b64adb4074aeca04c0488abbf120d076b6ca95645f42af853b8e311b59c027",
+      "sha256": "468a3f0e89a5bf36f4dd3a2a57b6539c8b2fb41ddc3cf472e2e2e04de03bb1f8",
       "size_bytes": 976
     },
     {
       "relative_path": "checkpoint-1/trainer_state.json",
       "role": "step-one-trainer-state",
-      "sha256": "f7541e61631a80ec0f52d398128babfd82d9137520bce0e61c11a70d08a56d40",
+      "sha256": "1a26013e2a1bc4820d20a3e814bc95e6b464af33eaaa8121bbc56802b8912bc2",
       "size_bytes": 741
     },
     {
@@ -100,7 +100,7 @@
     {
       "relative_path": "reload-verification.json",
       "role": "native-delta-reload-check",
-      "sha256": "b161953e6a4906811340cd84bdc22fd0632f5f2e477b31e0f4939d7c188075d8",
+      "sha256": "9290cd745569456e88eadc128b3162ebaf0a695034dcaebce0113ebabb0c33fe",
       "size_bytes": 1770
     }
   ],
@@ -122,8 +122,8 @@
     "experiment_id": "week1-smoke-r8",
     "max_steps": 1,
     "rank": 8,
-    "resolved_config_sha256": "dcea78a46ff67b650a850d9acf40a1aa135ad55b89a62161d6415797bcb5cff4",
-    "runner_config_sha256": "e6358516c76072a3ff9af00c1158d0f48bcfb9300ef162b4051c6607601ffb41",
+    "resolved_config_sha256": "02e76337084a6dee78cf20cd17f3b39dd26897568601a4f3998aeefb6297d9cd",
+    "runner_config_sha256": "2f31407b3f69c56af077d25a423fed9d4a0b9d5624fa49b42376a5331c39558c",
     "runner_payload_matches_resolved_config": true,
     "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
     "test_indices_sha256": "83d6bdad006418cd841167d938f835561dc13b9ccd464ad21ebe7dabeb0b2394"
@@ -147,7 +147,7 @@
     "evaluated_samples": 1,
     "generation_path_exercised": true,
     "loss": 6.005116939544678,
-    "runtime_seconds": 4.6332
+    "runtime_seconds": 4.5851
   },
   "evidence_gaps": [],
   "inputs": {
@@ -166,7 +166,7 @@
   },
   "measurement": {
     "upstream_peak_memory_gb": 0.979419921875,
-    "upstream_training_time_minutes": 0.09373082682291667
+    "upstream_training_time_minutes": 0.09266904296875
   },
   "process": {
     "course_data_binding": {
@@ -180,17 +180,17 @@
     },
     "exit_code": 0,
     "final_unseen_file_exposed_to_child": false,
-    "finished_at_utc": "2026-09-27T01:28:32.606164+00:00",
+    "finished_at_utc": "2026-09-27T01:38:01.658521+00:00",
     "model_input_binding": {
       "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
       "verified": true
     },
     "private_root_exposed_to_child": false,
-    "project_git_commit": "8b9d76bce51c0bb7293514e2e9a6d83482cdb295",
+    "project_git_commit": "3e56856e6e5902779019d41aa71aa71116c4cc6b",
     "project_worktree_clean": true,
     "runner_relative_path": "examples/legacies/examples_seq2seq/run_seq2seq.py",
-    "started_at_utc": "2026-09-27T01:28:14.605352+00:00",
-    "wall_seconds": 18.000850711
+    "started_at_utc": "2026-09-27T01:37:43.740869+00:00",
+    "wall_seconds": 17.91767633400002
   },
   "schema_version": 1,
   "scope_note": "Execution smoke only; these metrics are not a reproduction result.",
@@ -204,7 +204,7 @@
   "training": {
     "global_step": 1,
     "train_loss": 10.914900779724121,
-    "train_runtime_seconds": 5.3305,
+    "train_runtime_seconds": 5.2865,
     "train_samples": 1
   },
   "upstream": {
@@ -213,7 +213,7 @@
       {
         "classification": "data-handling",
         "relative_path": "patches/0001-pin-sst2-loader.patch",
-        "sha256": "31cf077bed73d9b50c9c4d33651e38a8d5db3a6bf95bc81ce53d8fe4da1e8643"
+        "sha256": "df8f3d60424a3885516942e83aa2a84bb58a25b7a4f8235f2fae58e42d63477a"
       },
       {
         "classification": "data-handling",
