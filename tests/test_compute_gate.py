@@ -551,17 +551,36 @@ def test_week1_manifest_writer_is_deterministic_and_file_gate_stops_run(
         )
 
 
-def test_checked_compute_gate_matches_locked_week1_evidence() -> None:
+def test_checked_compute_gate_records_the_measured_over_cap_decision() -> None:
     hardware, smoke = load_week1_evidence(
         PROJECT_ROOT / "data" / "manifests" / "environment-lock.json",
         PROJECT_ROOT / "data" / "manifests" / "week1-smoke.json",
     )
-    expected = build_compute_gate_manifest(hardware=hardware, smoke=smoke)
     checked = json.loads(
         (PROJECT_ROOT / "data" / "manifests" / "compute-gate.json").read_text(
             encoding="utf-8"
         )
     )
 
-    assert checked == expected
-    assert checked["decision"]["status"] == "STOP"
+    assert checked["hardware"]["source_manifest_sha256"] == (
+        hardware.source_manifest_sha256
+    )
+    assert checked["week1_smoke"]["source_manifest_sha256"] == (
+        smoke.source_manifest_sha256
+    )
+    assert checked["evaluation_batch_calibration"]["complete"] is True
+    assert (
+        checked["evaluation_batch_calibration"]["selected_evaluation_batch_size"]
+        == 32
+    )
+    assert checked["microbatch_calibration"]["complete"] is True
+    assert checked["microbatch_calibration"]["selected_physical_batch_size"] == 8
+    assert checked["pilot"]["complete"] is True
+    assert checked["projection"]["retained_training_runs"] == 13
+    assert checked["projection"]["status"] == "OVER_CAP"
+    assert checked["projection"]["projected_seconds"] > 48 * 60 * 60
+    assert checked["decision"] == {
+        "reasons": ["projected_time_exceeds_48_gpu_hour_cap"],
+        "retained_training_authorized": False,
+        "status": "STOP",
+    }
