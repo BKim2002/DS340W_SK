@@ -8,6 +8,13 @@
       ],
       "expected_config_count": 1
     },
+    "confirmation": {
+      "authorized": false,
+      "config_sha256": [],
+      "expected_config_count": null,
+      "requires_stage": "rank",
+      "selected_rank": null
+    },
     "rank": {
       "authorized": false,
       "config_sha256": [],

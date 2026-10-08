@@ -44,6 +44,7 @@ def _base_values(
     save_steps: int = 100,
     max_train_samples: int | None = None,
     max_val_samples: int = 436,
+    seed: int = 42,
 ) -> tuple[dict[str, Any], dict[str, str]]:
     if effective_batch_size % physical_batch_size:
         raise ValueError("Effective batch must be divisible by physical batch")
@@ -113,8 +114,8 @@ def _base_values(
         "predict_with_generate": True,
         "generation_max_length": 128,
         "generation_num_beams": 1,
-        "seed": 42,
-        "data_seed": 42,
+        "seed": seed,
+        "data_seed": seed,
         "full_determinism": True,
         "effective_model_dropout": 0.0,
         "fp16": False,
@@ -178,7 +179,9 @@ def _base_values(
     }
     authorities = {
         key: (
-            PAPER
+            "approved confirmation design"
+            if key in {"seed", "data_seed"} and seed != 42
+            else PAPER
             if key in paper_fields
             else ACCOMMODATION
             if key in accommodation_fields
@@ -247,6 +250,36 @@ def build_rank_matrix(
             )
         matrix.append(config)
     return matrix
+
+
+def build_confirmation_matrix(
+    model_path: Path,
+    output_root: Path,
+    physical_batch_size: int,
+    evaluation_batch_size: int,
+    selected_rank: int,
+) -> list[ResolvedConfig]:
+    """Repeat each distinct selected setting with the two reserved seeds."""
+
+    if selected_rank not in (2, 4, 8, 16):
+        raise ValueError("Selected rank must be one of the predeclared rank values")
+    configs = []
+    for rank in dict.fromkeys((8, selected_rank)):
+        for seed in (17, 23):
+            experiment_id = f"confirmation-r{rank}-seed{seed}"
+            config = _resolved(
+                experiment_id,
+                model_path=model_path,
+                output_dir=output_root / experiment_id,
+                physical_batch_size=physical_batch_size,
+                evaluation_batch_size=evaluation_batch_size,
+                effective_batch_size=16,
+                learning_rate=1e-4,
+                rank=rank,
+                seed=seed,
+            )
+            configs.append(config)
+    return configs
 
 
 def build_smoke_config(

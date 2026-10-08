@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 
@@ -126,6 +127,18 @@ def validate_nonfinal_config(config: ResolvedConfig) -> None:
     """Reject configurations that can touch final-unseen data or drift scientifically."""
 
     values = config.values
+    confirmation = re.fullmatch(
+        r"confirmation-r(2|4|8|16)-seed(17|23)", config.experiment_id
+    )
+    expected_seed = int(confirmation.group(2)) if confirmation else 42
+    if confirmation and (
+        values.get("lora_r") != int(confirmation.group(1))
+        or values.get("learning_rate") != 1e-4
+        or values.get("effective_batch_size") != 16
+        or values.get("max_steps") != 20_000
+        or values.get("max_val_samples") != 436
+    ):
+        raise ValueError("Confirmation configuration differs from locked design")
     if set(config.authority_by_field) != set(values):
         raise ValueError("Every resolved value must have exactly one authority")
 
@@ -162,8 +175,8 @@ def validate_nonfinal_config(config: ResolvedConfig) -> None:
         "max_grad_norm": 1.0,
         "lr_scheduler_type": "linear",
         "warmup_steps": 0,
-        "seed": 42,
-        "data_seed": 42,
+        "seed": expected_seed,
+        "data_seed": expected_seed,
         "data_sample_seed": 42,
         "overwrite_cache": True,
         "fp16": False,

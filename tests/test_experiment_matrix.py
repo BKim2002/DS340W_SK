@@ -4,6 +4,7 @@ import pytest
 
 from ds340w_repro.build_matrix import (
     build_baseline_config,
+    build_confirmation_matrix,
     build_evaluation_calibration_config,
     build_pilot_config,
     build_rank_matrix,
@@ -74,6 +75,20 @@ def test_rank_matrix_uses_alpha_twice_rank_and_reuses_rank_eight() -> None:
         build_rank_matrix(
             MODEL_PATH, Path("runs"), 2, 4, 5e-4, 16, Path("rank8")
         )
+
+
+def test_confirmation_matrix_has_only_reserved_seeds_and_distinct_settings() -> None:
+    matrix = build_confirmation_matrix(MODEL_PATH, Path("runs"), 8, 32, 4)
+    assert [(row.values["lora_r"], row.values["seed"]) for row in matrix] == [
+        (8, 17), (8, 23), (4, 17), (4, 23)
+    ]
+    assert all(row.values["data_sample_seed"] == 42 for row in matrix)
+    assert all(row.values["data_seed"] == row.values["seed"] for row in matrix)
+    assert len(build_confirmation_matrix(MODEL_PATH, Path("runs"), 8, 32, 8)) == 2
+    with pytest.raises(ValueError, match="declared rank"):
+        build_confirmation_matrix(MODEL_PATH, Path("runs"), 8, 32, 6)
+    with pytest.raises(ValueError, match="seed"):
+        validate_nonfinal_config(matrix[0].with_value("seed", 42, "test"))
 
 
 def test_normalization_and_checksum_are_stable() -> None:

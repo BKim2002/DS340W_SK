@@ -254,6 +254,8 @@ def enforce_compute_gate(
         stage = "baseline"
     elif config.experiment_id in {"rank-r2", "rank-r4", "rank-r16"}:
         stage = "rank"
+    elif config.experiment_id.startswith("confirmation-r"):
+        stage = "confirmation"
     else:
         raise ComputeGateError(
             f"Unsupported experiment at OpenDelta execution boundary: "
@@ -412,7 +414,7 @@ def invoke_original_runner(
         {
             "PYTHONPATH": os.pathsep.join(python_paths),
             "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
-            "PYTHONHASHSEED": "42",
+            "PYTHONHASHSEED": str(config.values["seed"]),
             "TOKENIZERS_PARALLELISM": "false",
             "TRANSFORMERS_OFFLINE": "1",
             "HF_HUB_OFFLINE": "1",

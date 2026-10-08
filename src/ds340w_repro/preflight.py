@@ -811,6 +811,13 @@ def build_compute_gate_manifest(
                 "config_sha256": [],
                 "requires_stage": "baseline",
             },
+            "confirmation": {
+                "authorized": False,
+                "expected_config_count": None,
+                "config_sha256": [],
+                "requires_stage": "rank",
+                "selected_rank": None,
+            },
         },
         "decision": {
             "status": "PASS" if retained_training_authorized else "STOP",
@@ -856,6 +863,48 @@ def authorize_rank_stage(
         "expected_config_count": 3,
         "config_sha256": list(rank_hashes),
         "requires_stage": "baseline",
+    }
+    return updated
+
+
+def authorize_confirmation_stage(
+    manifest: Mapping[str, Any], *, selected_rank: int,
+    confirmation_config_sha256: Sequence[str]
+) -> dict[str, Any]:
+    """Authorize two or four seed repeats after all rank runs are verified."""
+
+    if selected_rank not in (2, 4, 8, 16):
+        raise ComputeGateError("Confirmation rank is outside the declared sweep")
+    expected_count = 2 if selected_rank == 8 else 4
+    hashes = _validate_stage_hashes(
+        confirmation_config_sha256, stage="confirmation", maximum=4
+    )
+    if len(hashes) != expected_count:
+        raise ComputeGateError(
+            f"Confirmation requires exactly {expected_count} configuration checksums"
+        )
+    authorization = manifest.get("authorization")
+    if not isinstance(authorization, Mapping):
+        raise ComputeGateError("Compute-gate stage authorization is incomplete")
+    rank = authorization.get("rank")
+    if not isinstance(rank, Mapping):
+        raise ComputeGateError("Rank stage is not authorized")
+    rank_hashes = rank.get("config_sha256")
+    if not isinstance(rank_hashes, list) or len(rank_hashes) != 3:
+        raise ComputeGateError("Rank stage is not authorized")
+    require_retained_training_authorization(
+        manifest, stage="rank", resolved_config_sha256=rank_hashes[0]
+    )
+    baseline_hashes = authorization["baseline"]["config_sha256"]
+    if set(hashes) & (set(baseline_hashes) | set(rank_hashes)):
+        raise ComputeGateError("Confirmation hashes must be distinct from earlier runs")
+    updated = json.loads(json.dumps(manifest))
+    updated["authorization"]["confirmation"] = {
+        "authorized": True,
+        "expected_config_count": expected_count,
+        "config_sha256": list(hashes),
+        "requires_stage": "rank",
+        "selected_rank": selected_rank,
     }
     return updated
 
@@ -996,7 +1045,7 @@ def require_retained_training_authorization(
 ) -> None:
     """Fail closed unless complete measured evidence authorizes this stage/config."""
 
-    if stage not in {"baseline", "rank"}:
+    if stage not in {"baseline", "rank", "confirmation"}:
         raise ComputeGateError(f"Unsupported retained-training stage: {stage}")
     if not _valid_sha256(resolved_config_sha256):
         raise ComputeGateError("Requested configuration checksum is invalid")
@@ -1055,7 +1104,10 @@ def require_retained_training_authorization(
     stage_authorization = authorization.get(stage)
     if not isinstance(stage_authorization, Mapping):
         raise ComputeGateError("Compute-gate stage authorization is incomplete")
-    expected_count = 1 if stage == "baseline" else 3
+    expected_count = (
+        1 if stage == "baseline" else 3 if stage == "rank"
+        else 2 if stage_authorization.get("selected_rank") == 8 else 4
+    )
     hashes = stage_authorization.get("config_sha256")
     stage_complete = (
         stage_authorization.get("authorized") is True
@@ -1071,6 +1123,12 @@ def require_retained_training_authorization(
         baseline = authorization.get("baseline")
         if not isinstance(baseline, Mapping) or baseline.get("authorized") is not True:
             raise ComputeGateError("Compute-gate rank stage requires baseline authorization")
+    if stage == "confirmation":
+        rank = authorization.get("rank")
+        if not isinstance(rank, Mapping) or rank.get("authorized") is not True:
+            raise ComputeGateError("Confirmation stage requires rank authorization")
+        if stage_authorization.get("selected_rank") not in (2, 4, 8, 16):
+            raise ComputeGateError("Confirmation selected rank is invalid")
     if resolved_config_sha256 not in hashes:
         raise ComputeGateError(
             "Requested configuration is not listed in the compute-gate manifest"

@@ -16,6 +16,7 @@ from ds340w_repro.preflight import (
     RetainedRunPlan,
     RetainedRunStage,
     Week1SmokeEvidence,
+    authorize_confirmation_stage,
     authorize_rank_stage,
     build_compute_gate_manifest,
     load_week1_evidence,
@@ -116,6 +117,15 @@ def test_default_retained_plan_reserves_the_eight_run_worst_case() -> None:
         "training_runs": 8,
         "final_evaluations": 2,
     }
+
+
+def test_confirmation_stage_cannot_be_authorized_before_rank() -> None:
+    manifest = build_compute_gate_manifest(hardware=_hardware(), smoke=_smoke())
+    with pytest.raises(ComputeGateError):
+        authorize_confirmation_stage(
+            manifest, selected_rank=8,
+            confirmation_config_sha256=("1" * 64, "2" * 64),
+        )
 
 
 def test_projection_expands_from_the_declared_run_plan() -> None:
@@ -267,6 +277,21 @@ def test_complete_measured_evidence_under_the_cap_authorizes_the_fixed_cell() ->
         )
         is None
     )
+    confirmation_hashes = tuple(f"{number:064x}" for number in range(11, 15))
+    with_confirmation = authorize_confirmation_stage(
+        with_rank, selected_rank=4,
+        confirmation_config_sha256=confirmation_hashes,
+    )
+    assert with_confirmation["authorization"]["confirmation"]["selected_rank"] == 4
+    assert require_retained_training_authorization(
+        with_confirmation, stage="confirmation",
+        resolved_config_sha256=confirmation_hashes[0],
+    ) is None
+    with pytest.raises(ComputeGateError, match="exactly 2"):
+        authorize_confirmation_stage(
+            with_rank, selected_rank=8,
+            confirmation_config_sha256=confirmation_hashes,
+        )
 
 
 def test_projection_above_48_gpu_hours_stops_retained_training() -> None:
