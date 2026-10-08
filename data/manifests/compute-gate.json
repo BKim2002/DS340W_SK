@@ -2,16 +2,11 @@
   "assessment_kind": "compute-gate",
   "authorization": {
     "baseline": {
-      "authorized": false,
+      "authorized": true,
       "config_sha256": [
-        "e757994a75e6c97aaf077bb03b0757d38f8db7f57ad2ed9a047d03e38a0b099c",
-        "cf9aab3d00bea4a9c67e7e140a2445cf0c222462a5b5eac7cc0f11b04ae04d02",
-        "5f411f91efe0715ea7ee0c7fc40f7c086d4c504f2a37b3866728a1e9e8305de1",
-        "3e8f83eef3810702ce172fb981c2ec8c62137de85f8b95ab84cdef47e5fa5e74",
-        "07c5b2e13f50f759f5e9c7c8879db17d1b653ebbed60cf7850899ee845560f1a",
-        "1754ad1d01c64fb25fba71dd9fa206faacbd688fec1803ae85ba94084136f727"
+        "e757994a75e6c97aaf077bb03b0757d38f8db7f57ad2ed9a047d03e38a0b099c"
       ],
-      "expected_config_count": 6
+      "expected_config_count": 1
     },
     "rank": {
       "authorized": false,
@@ -21,25 +16,23 @@
     }
   },
   "decision": {
-    "reasons": [
-      "projected_time_exceeds_48_gpu_hour_cap"
-    ],
-    "retained_training_authorized": false,
-    "status": "STOP"
+    "reasons": [],
+    "retained_training_authorized": true,
+    "status": "PASS"
   },
   "evaluation_batch_calibration": {
     "attempts": [
       {
-        "config_sha256": "942f2a5d2960ce97d90dbab8a428ee61453a2e0080b1d72a166328ad344b1510",
+        "config_sha256": "39a903de04c1e112fcb75e2ece2c868b15b7959d2ba35b25d324ec2aaf5c1896",
         "evaluated_samples": 436,
         "evaluation_batch_size": 32,
         "exit_status": 0,
-        "finished_at_utc": "2026-09-27T01:40:56.298305+00:00",
+        "finished_at_utc": "2026-10-08T14:21:34.560127+00:00",
         "fresh_process": true,
-        "minimum_free_memory_mib": 4440.0,
+        "minimum_free_memory_mib": 4702.0,
         "oom": false,
         "passed": true,
-        "started_at_utc": "2026-09-27T01:39:18.966183+00:00"
+        "started_at_utc": "2026-10-08T14:20:01.221880+00:00"
       }
     ],
     "complete": true,
@@ -54,32 +47,32 @@
     ],
     "selected_evaluation_batch_size": 32
   },
-  "evidence_cutoff_utc": "2026-09-27T01:44:54.831429+00:00",
+  "evidence_cutoff_utc": "2026-10-08T14:25:33.784134+00:00",
   "hardware": {
     "compatibility": "RETAINED_RUN_PREFLIGHT_COMPLETE",
     "cuda_available": true,
-    "driver_version": "616.92",
+    "driver_version": "617.42",
     "gpu_name": "NVIDIA GeForce RTX 4060",
-    "probe_wall_seconds": 3.139481852,
-    "source_manifest_sha256": "6dee7a18ad3e8d721b9e3c454a606d8a21d93e6917ffe79523f2c5a69eb1ce14",
+    "probe_wall_seconds": 2.538091045,
+    "source_manifest_sha256": "1bd526e57ab6a338e663e2928172183f6df98a62a93b944cf6b6d832da5e4bb1",
     "total_memory_mib": 8188
   },
   "microbatch_calibration": {
     "attempts": [
       {
         "completed_optimizer_steps": 10,
-        "config_sha256": "45548184ad918e5e6237711d78b53acf6c0efd26d030e58b92a4972e5d14dc7e",
+        "config_sha256": "6465f78f9810028d7f9b9f9c4fa4ec2c6da568eb9cff1dfe43a83824550c5028",
         "effective_batch_size": 32,
         "exit_status": 0,
-        "finished_at_utc": "2026-09-27T01:41:30.547117+00:00",
+        "finished_at_utc": "2026-10-08T14:22:07.462232+00:00",
         "fresh_process": true,
         "lora_alpha": 32,
-        "minimum_free_memory_mib": 4837.0,
+        "minimum_free_memory_mib": 5094.0,
         "oom": false,
         "passed": true,
         "physical_batch_size": 8,
         "rank": 16,
-        "started_at_utc": "2026-09-27T01:40:56.314733+00:00",
+        "started_at_utc": "2026-10-08T14:21:34.583443+00:00",
         "target_optimizer_steps": 10
       }
     ],
@@ -95,37 +88,37 @@
   },
   "pilot": {
     "complete": true,
-    "config_sha256": "5d36f5e1918094b9627669861202397abcfc01e3198be003f9f797ea64a13ac1",
+    "config_sha256": "125f6d1d8d470bc83dc10a75ad8be830e427a490703efccc85ce1e7b6a7e8979",
     "do_test": false,
     "effective_batch_size": 32,
     "evaluation_batch_size": 32,
     "evaluation_measurements_seconds": [
-      4.7386,
-      4.899
+      4.549,
+      5.027
     ],
     "exit_status": 0,
-    "finished_at_utc": "2026-09-27T01:44:54.831429+00:00",
+    "finished_at_utc": "2026-10-08T14:25:33.784134+00:00",
     "fresh_process": true,
-    "full_test_evaluation_seconds": 4.899,
+    "full_test_evaluation_seconds": 5.027,
     "learning_rate": 0.001,
     "lora_alpha": 32,
-    "non_evaluation_seconds_steps_21_to_200": 145.44309651000006,
+    "non_evaluation_seconds_steps_21_to_200": 150.55880288300003,
     "optimizer_steps": 200,
     "physical_batch_size": 8,
     "rank": 16,
-    "seconds_per_optimizer_step": 0.8080172028333337,
-    "started_at_utc": "2026-09-27T01:41:30.565603+00:00",
+    "seconds_per_optimizer_step": 0.8364377937944446,
+    "started_at_utc": "2026-10-08T14:22:07.478972+00:00",
     "warmup_steps_excluded": 20
   },
   "projection": {
-    "actual_preflight_seconds": 356.935490986,
+    "actual_preflight_seconds": 356.318702618,
     "cap_gpu_hours": 48,
     "cap_seconds": 172800,
     "final_evaluations": 2,
     "formula": "actual_preflight_seconds + 1.20 * (sum(stage_runs * (stage_steps * s + stage_evaluations * e)) + final_evaluations * e)",
-    "full_test_evaluation_seconds": 4.899,
-    "projected_gpu_hours": 74.37637232638502,
-    "projected_seconds": 267754.9403749861,
+    "full_test_evaluation_seconds": 5.027,
+    "projected_gpu_hours": 47.393411086430945,
+    "projected_seconds": 170616.2799111514,
     "reserve_multiplier": 1.2,
     "retained_run_plan": {
       "final_evaluations": 2,
@@ -134,7 +127,7 @@
           "evaluations_per_run": 200,
           "name": "baseline",
           "optimizer_steps_per_run": 20000,
-          "training_runs": 6
+          "training_runs": 1
         },
         {
           "evaluations_per_run": 200,
@@ -149,23 +142,23 @@
           "training_runs": 4
         }
       ],
-      "training_runs": 13
+      "training_runs": 8
     },
-    "retained_training_runs": 13,
-    "seconds_per_optimizer_step": 0.8080172028333337,
-    "status": "OVER_CAP"
+    "retained_training_runs": 8,
+    "seconds_per_optimizer_step": 0.8364377937944446,
+    "status": "WITHIN_CAP"
   },
-  "schema_version": 2,
+  "schema_version": 3,
   "week1_smoke": {
-    "completed_at_utc": "2026-09-27T01:38:01.658521+00:00",
-    "environment_lock_sha256": "6dee7a18ad3e8d721b9e3c454a606d8a21d93e6917ffe79523f2c5a69eb1ce14",
-    "observed_preflight_seconds_lower_bound": 21.05715818600002,
+    "completed_at_utc": "2026-10-08T14:18:31.226486+00:00",
+    "environment_lock_sha256": "1bd526e57ab6a338e663e2928172183f6df98a62a93b944cf6b6d832da5e4bb1",
+    "observed_preflight_seconds_lower_bound": 23.739251965999998,
     "optimizer_steps": 1,
-    "resolved_config_sha256": "02e76337084a6dee78cf20cd17f3b39dd26897568601a4f3998aeefb6297d9cd",
+    "resolved_config_sha256": "ac84d2f08871898cb67f08510849b11ab2515a5b93c52b35e2bb6198c7b0f5b6",
     "scope": "one-step non-result viability evidence",
-    "source_manifest_sha256": "f267da4e86724bd5b33a9c74c8a37ccf5ebcb597c5c3759fe4dc318e1cbe479d",
+    "source_manifest_sha256": "24a317015309d9b858bbbb78f60e174d8fe5d527762ab7ecc1a1e0b34b32936f",
     "upstream_peak_memory_gb": 0.979419921875,
     "verified": true,
-    "wall_seconds": 17.91767633400002
+    "wall_seconds": 21.201160920999996
   }
 }

@@ -430,7 +430,7 @@ def test_checked_environment_and_smoke_manifests_load_as_week1_evidence() -> Non
     checked_environment = json.loads(environment_path.read_text(encoding="utf-8"))
     assert hardware.gpu_name == "NVIDIA GeForce RTX 4060"
     assert hardware.total_memory_mib == 8_188
-    assert hardware.driver_version == "616.92"
+    assert hardware.driver_version == "617.42"
     assert hardware.cuda_available is True
     assert hardware.probe_wall_seconds == checked_environment["probe_wall_seconds"]
     assert hardware.source_manifest_sha256 == sha256(
@@ -547,7 +547,7 @@ def test_week1_manifest_writer_is_deterministic_and_file_gate_stops_run(
         )
 
 
-def test_checked_compute_gate_records_the_measured_over_cap_decision() -> None:
+def test_checked_compute_gate_records_the_fixed_cell_pass_decision() -> None:
     hardware, smoke = load_week1_evidence(
         PROJECT_ROOT / "data" / "manifests" / "environment-lock.json",
         PROJECT_ROOT / "data" / "manifests" / "week1-smoke.json",
@@ -572,11 +572,15 @@ def test_checked_compute_gate_records_the_measured_over_cap_decision() -> None:
     assert checked["microbatch_calibration"]["complete"] is True
     assert checked["microbatch_calibration"]["selected_physical_batch_size"] == 8
     assert checked["pilot"]["complete"] is True
-    assert checked["projection"]["retained_training_runs"] == 13
-    assert checked["projection"]["status"] == "OVER_CAP"
-    assert checked["projection"]["projected_seconds"] > 48 * 60 * 60
+    assert checked["schema_version"] == 3
+    assert checked["projection"]["retained_training_runs"] == 8
+    assert checked["projection"]["status"] == "WITHIN_CAP"
+    assert checked["projection"]["projected_seconds"] < 48 * 60 * 60
+    assert checked["authorization"]["baseline"]["expected_config_count"] == 1
+    assert checked["authorization"]["baseline"]["authorized"] is True
+    assert checked["authorization"]["rank"]["authorized"] is False
     assert checked["decision"] == {
-        "reasons": ["projected_time_exceeds_48_gpu_hour_cap"],
-        "retained_training_authorized": False,
-        "status": "STOP",
+        "reasons": [],
+        "retained_training_authorized": True,
+        "status": "PASS",
     }
