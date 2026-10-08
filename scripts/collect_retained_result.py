@@ -196,6 +196,12 @@ def collect(*, config_path: Path, artifact_dir: Path) -> dict[str, Any]:
         raise ValueError("Final upstream evaluation disagrees with selected checkpoint")
     _compare_saved_tensors(checkpoint, output_dir)
 
+    execution = _read_json(output_dir / "execution-tree.json")
+    execution_root = Path(str(execution.get("root"))).resolve(strict=True)
+    if not execution_root.is_relative_to(PROJECT_ROOT / "runtime"):
+        raise ValueError("Original execution tree is outside this project")
+    sys.path.insert(0, str(execution_root))
+
     cache_root = Path(
         os.environ.get("DS340W_CACHE_ROOT", Path.home() / ".cache" / "ds340w")
     )

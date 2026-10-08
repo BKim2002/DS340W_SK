@@ -1,0 +1,15 @@
+{
+  "accuracy_percent": 94.4954128440367,
+  "artifact_directory_sha256": "345ab5ac8319056bde8648e1c0c2286fdf9815ee459d5186b60c1d584816e240",
+  "artifact_kind": "retained-run-result",
+  "artifact_manifest_sha256": "7d320fb6791b07eed2430cf564bb8c38c3867c9713d148361a40418321c426f6",
+  "artifact_path": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/artifacts/retained/baseline-r8-lr1e-4-eb16",
+  "checkpoint_step": 11600,
+  "config_sha256": "e757994a75e6c97aaf077bb03b0757d38f8db7f57ad2ed9a047d03e38a0b099c",
+  "correct_count": 412,
+  "experiment_id": "baseline-r8-lr1e-4-eb16",
+  "final_unseen_accessed": false,
+  "original_process_wall_seconds": 9814.870694359,
+  "schema_version": 1,
+  "status": "verified"
+}
