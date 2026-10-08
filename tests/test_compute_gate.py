@@ -75,7 +75,7 @@ def _evaluation_attempt(batch_size: int = 32) -> EvaluationBatchAttempt:
 def test_projection_uses_the_predeclared_conservative_formula() -> None:
     plan = RetainedRunPlan(
         stages=(
-            RetainedRunStage("baseline", training_runs=6),
+            RetainedRunStage("baseline", training_runs=1),
             RetainedRunStage("rank", training_runs=3),
         ),
         final_evaluations=2,
@@ -87,16 +87,16 @@ def test_projection_uses_the_predeclared_conservative_formula() -> None:
         retained_run_plan=plan,
     )
 
-    expected = 600.0 + 1.20 * (9 * (20_000 * 0.5 + 200 * 30.0) + 2 * 30.0)
+    expected = 600.0 + 1.20 * (4 * (20_000 * 0.5 + 200 * 30.0) + 2 * 30.0)
     assert projection == pytest.approx(expected)
 
 
-def test_default_retained_plan_reserves_the_thirteen_run_worst_case() -> None:
+def test_default_retained_plan_reserves_the_eight_run_worst_case() -> None:
     assert DEFAULT_RETAINED_RUN_PLAN.to_dict() == {
         "stages": [
             {
                 "name": "baseline",
-                "training_runs": 6,
+                "training_runs": 1,
                 "optimizer_steps_per_run": 20_000,
                 "evaluations_per_run": 200,
             },
@@ -113,7 +113,7 @@ def test_default_retained_plan_reserves_the_thirteen_run_worst_case() -> None:
                 "evaluations_per_run": 200,
             },
         ],
-        "training_runs": 13,
+        "training_runs": 8,
         "final_evaluations": 2,
     }
 
@@ -121,7 +121,7 @@ def test_default_retained_plan_reserves_the_thirteen_run_worst_case() -> None:
 def test_projection_expands_from_the_declared_run_plan() -> None:
     plan = RetainedRunPlan(
         stages=(
-            RetainedRunStage("baseline", training_runs=6),
+            RetainedRunStage("baseline", training_runs=1),
             RetainedRunStage("rank", training_runs=3),
             RetainedRunStage("confirmation", training_runs=4),
         ),
@@ -135,9 +135,9 @@ def test_projection_expands_from_the_declared_run_plan() -> None:
         retained_run_plan=plan,
     )
 
-    expected = 600.0 + 1.20 * (13 * (20_000 * 0.5 + 200 * 30.0) + 2 * 30.0)
+    expected = 600.0 + 1.20 * (8 * (20_000 * 0.5 + 200 * 30.0) + 2 * 30.0)
     assert projection == pytest.approx(expected)
-    assert plan.to_dict()["training_runs"] == 13
+    assert plan.to_dict()["training_runs"] == 8
 
 
 def test_week1_smoke_proves_feasibility_but_does_not_authorize_long_runs() -> None:
@@ -167,7 +167,7 @@ def test_week1_smoke_proves_feasibility_but_does_not_authorize_long_runs() -> No
     }
 
 
-def test_complete_measured_evidence_under_the_cap_authorizes_the_grid() -> None:
+def test_complete_measured_evidence_under_the_cap_authorizes_the_fixed_cell() -> None:
     failed_batch_eight = CalibrationAttempt(
         physical_batch_size=8,
         config_sha256="c" * 64,
@@ -216,7 +216,7 @@ def test_complete_measured_evidence_under_the_cap_authorizes_the_grid() -> None:
         exit_status=0,
         evaluation_batch_size=16,
     )
-    baseline_hashes = tuple(f"{number:064x}" for number in range(1, 7))
+    baseline_hashes = (f"{1:064x}",)
 
     manifest = build_compute_gate_manifest(
         hardware=_hardware(),
@@ -245,7 +245,7 @@ def test_complete_measured_evidence_under_the_cap_authorizes_the_grid() -> None:
     assert manifest["evaluation_batch_calibration"]["selected_evaluation_batch_size"] == 16
     assert manifest["pilot"]["seconds_per_optimizer_step"] == pytest.approx(0.1)
     assert manifest["pilot"]["full_test_evaluation_seconds"] == pytest.approx(5.0)
-    assert manifest["projection"]["projected_seconds"] == pytest.approx(47_412.0)
+    assert manifest["projection"]["projected_seconds"] == pytest.approx(29_412.0)
     assert manifest["projection"]["status"] == "WITHIN_CAP"
     assert manifest["decision"] == {
         "reasons": [],
@@ -297,7 +297,7 @@ def test_projection_above_48_gpu_hours_stops_retained_training() -> None:
         learning_rate=1e-3,
         optimizer_steps=200,
         warmup_steps_excluded=20,
-        non_evaluation_seconds_steps_21_to_200=90.0,
+        non_evaluation_seconds_steps_21_to_200=108.0,
         full_test_evaluation_seconds=(30.0, 25.0),
         do_test=False,
         exit_status=0,
@@ -324,12 +324,10 @@ def test_projection_above_48_gpu_hours_stops_retained_training() -> None:
         calibration_attempts=(calibration,),
         pilot=slow_pilot,
         actual_preflight_seconds=600.0,
-        baseline_config_sha256=tuple(
-            f"{number:064x}" for number in range(1, 7)
-        ),
+        baseline_config_sha256=(f"{1:064x}",),
     )
 
-    assert manifest["projection"]["projected_seconds"] == pytest.approx(250_272.0)
+    assert manifest["projection"]["projected_seconds"] == pytest.approx(173_472.0)
     assert manifest["projection"]["status"] == "OVER_CAP"
     assert manifest["decision"] == {
         "reasons": ["projected_time_exceeds_48_gpu_hour_cap"],
@@ -338,10 +336,10 @@ def test_projection_above_48_gpu_hours_stops_retained_training() -> None:
     }
 
 
-def test_nine_run_projection_cannot_authorize_retained_training() -> None:
+def test_four_run_projection_cannot_omit_confirmation_reserve() -> None:
     incomplete_plan = RetainedRunPlan(
         stages=(
-            RetainedRunStage("baseline", training_runs=6),
+            RetainedRunStage("baseline", training_runs=1),
             RetainedRunStage("rank", training_runs=3),
         ),
         final_evaluations=2,
@@ -386,9 +384,7 @@ def test_nine_run_projection_cannot_authorize_retained_training() -> None:
             evaluation_batch_size=32,
         ),
         actual_preflight_seconds=600.0,
-        baseline_config_sha256=tuple(
-            f"{number:064x}" for number in range(1, 7)
-        ),
+        baseline_config_sha256=(f"{1:064x}",),
         retained_run_plan=incomplete_plan,
     )
 
@@ -457,7 +453,7 @@ def test_checked_environment_and_smoke_manifests_load_as_week1_evidence() -> Non
 
 
 def test_authorizer_accepts_only_a_hash_listed_by_a_complete_pass() -> None:
-    baseline_hashes = tuple(f"{number:064x}" for number in range(1, 7))
+    baseline_hashes = (f"{1:064x}",)
     manifest = build_compute_gate_manifest(
         hardware=_hardware(),
         smoke=_smoke(),

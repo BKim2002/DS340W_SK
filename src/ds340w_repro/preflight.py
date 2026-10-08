@@ -85,7 +85,7 @@ class RetainedRunPlan:
 
 DEFAULT_RETAINED_RUN_PLAN = RetainedRunPlan(
     stages=(
-        RetainedRunStage("baseline", training_runs=6),
+        RetainedRunStage("baseline", training_runs=1),
         RetainedRunStage("rank", training_runs=3),
         RetainedRunStage("confirmation", training_runs=4),
     ),
@@ -94,7 +94,7 @@ DEFAULT_RETAINED_RUN_PLAN = RetainedRunPlan(
 
 
 def _retained_plan_is_conservative(plan: RetainedRunPlan) -> bool:
-    """Return whether a plan reserves the approved 13-run worst case exactly."""
+    """Return whether a plan reserves the approved eight-run worst case exactly."""
 
     return plan == DEFAULT_RETAINED_RUN_PLAN
 
@@ -630,9 +630,9 @@ def build_compute_gate_manifest(
             actual_preflight_seconds, "Actual preflight seconds"
         )
     baseline_hashes = _validate_stage_hashes(
-        baseline_config_sha256, stage="baseline", maximum=6
+        baseline_config_sha256, stage="baseline", maximum=1
     )
-    baseline_hashes_complete = len(baseline_hashes) == 6
+    baseline_hashes_complete = len(baseline_hashes) == 1
 
     smoke_verified = smoke is not None and smoke.verified
     hardware_matches_target = (
@@ -705,7 +705,7 @@ def build_compute_gate_manifest(
         pilot_payload = pilot.to_dict(complete=pilot_complete)
 
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "assessment_kind": "compute-gate",
         "evidence_cutoff_utc": (
             pilot.finished_at_utc
@@ -802,7 +802,7 @@ def build_compute_gate_manifest(
         "authorization": {
             "baseline": {
                 "authorized": baseline_authorized,
-                "expected_config_count": 6,
+                "expected_config_count": 1,
                 "config_sha256": list(baseline_hashes),
             },
             "rank": {
@@ -823,7 +823,7 @@ def build_compute_gate_manifest(
 def authorize_rank_stage(
     manifest: Mapping[str, Any], *, rank_config_sha256: Sequence[str]
 ) -> dict[str, Any]:
-    """Add three post-selection rank hashes to an authorized baseline gate."""
+    """Add three rank hashes to an authorized fixed-cell baseline gate."""
 
     rank_hashes = _validate_stage_hashes(
         rank_config_sha256, stage="rank", maximum=3
@@ -1019,7 +1019,7 @@ def require_retained_training_authorization(
     projection = manifest.get("projection")
     authorization = manifest.get("authorization")
     complete_sections = (
-        manifest.get("schema_version") == 2
+        manifest.get("schema_version") == 3
         and decision.get("reasons") == []
         and isinstance(hardware, Mapping)
         and hardware.get("compatibility") == "RETAINED_RUN_PREFLIGHT_COMPLETE"
@@ -1055,7 +1055,7 @@ def require_retained_training_authorization(
     stage_authorization = authorization.get(stage)
     if not isinstance(stage_authorization, Mapping):
         raise ComputeGateError("Compute-gate stage authorization is incomplete")
-    expected_count = 6 if stage == "baseline" else 3
+    expected_count = 1 if stage == "baseline" else 3
     hashes = stage_authorization.get("config_sha256")
     stage_complete = (
         stage_authorization.get("authorized") is True
@@ -1106,12 +1106,12 @@ def _projection_plan_is_complete(projection: Mapping[str, Any]) -> bool:
             return False
         stage_specs[name] = (runs, steps, evaluations)
     expected = {
-        "baseline": (6, OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN),
+        "baseline": (1, OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN),
         "rank": (3, OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN),
         "confirmation": (4, OPTIMIZER_STEPS_PER_RUN, EVALUATIONS_PER_RUN),
     }
     return (
         stage_specs == expected
-        and plan.get("training_runs") == 13
+        and plan.get("training_runs") == 8
         and plan.get("final_evaluations") == FINAL_EVALUATIONS
     )

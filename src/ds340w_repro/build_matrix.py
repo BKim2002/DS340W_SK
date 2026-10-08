@@ -196,38 +196,25 @@ def _resolved(experiment_id: str, **kwargs: Any) -> ResolvedConfig:
     return config
 
 
-def _lr_label(value: float) -> str:
-    return {1e-4: "1e-4", 5e-4: "5e-4", 1e-3: "1e-3"}[value]
-
-
-def build_baseline_matrix(
+def build_baseline_config(
     model_path: Path,
     output_root: Path,
     physical_batch_size: int,
     evaluation_batch_size: int,
-) -> list[ResolvedConfig]:
-    """Return six cells in the preregistered scientific tie-break order."""
+) -> ResolvedConfig:
+    """Return the approved first paper-grid cell at rank 8, LR 1e-4, batch 16."""
 
-    matrix = []
-    for learning_rate in (1e-4, 5e-4, 1e-3):
-        for effective_batch_size in (16, 32):
-            experiment_id = (
-                f"baseline-r8-lr{_lr_label(learning_rate)}-"
-                f"eb{effective_batch_size}"
-            )
-            matrix.append(
-                _resolved(
-                    experiment_id,
-                    model_path=model_path,
-                    output_dir=output_root / experiment_id,
-                    physical_batch_size=physical_batch_size,
-                    evaluation_batch_size=evaluation_batch_size,
-                    effective_batch_size=effective_batch_size,
-                    learning_rate=learning_rate,
-                    rank=8,
-                )
-            )
-    return matrix
+    experiment_id = "baseline-r8-lr1e-4-eb16"
+    return _resolved(
+        experiment_id,
+        model_path=model_path,
+        output_dir=output_root / experiment_id,
+        physical_batch_size=physical_batch_size,
+        evaluation_batch_size=evaluation_batch_size,
+        effective_batch_size=16,
+        learning_rate=1e-4,
+        rank=8,
+    )
 
 
 def build_rank_matrix(
@@ -239,6 +226,8 @@ def build_rank_matrix(
     selected_effective_batch_size: int,
     rank_eight_checkpoint: Path,
 ) -> list[ResolvedConfig]:
+    if selected_learning_rate != 1e-4 or selected_effective_batch_size != 16:
+        raise ValueError("Rank sweep must use the approved fixed baseline setting")
     matrix = []
     for rank in (2, 4, 8, 16):
         experiment_id = f"rank-r{rank}"
@@ -392,21 +381,17 @@ def _main() -> None:
     parser.add_argument("--evaluation-batch-size", type=int, default=1)
     arguments = parser.parse_args()
 
-    matrix = build_baseline_matrix(
+    config = build_baseline_config(
         arguments.model_path,
         arguments.output_root,
         arguments.physical_batch_size,
         arguments.evaluation_batch_size,
     )
     if arguments.verify:
-        for config in matrix:
-            validate_nonfinal_config(config)
+        validate_nonfinal_config(config)
     print(
         json.dumps(
-            [
-                {"experiment_id": row.experiment_id, "sha256": row.sha256}
-                for row in matrix
-            ],
+            {"experiment_id": config.experiment_id, "sha256": config.sha256},
             indent=2,
             sort_keys=True,
         )

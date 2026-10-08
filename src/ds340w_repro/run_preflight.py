@@ -15,8 +15,8 @@ import time
 from typing import Any, Callable
 
 from ds340w_repro.build_matrix import (
-    build_baseline_matrix,
     build_evaluation_calibration_config,
+    build_baseline_config,
     build_pilot_config,
     build_rank_matrix,
     build_training_calibration_config,
@@ -280,7 +280,7 @@ def _pilot_evidence(config: ResolvedConfig, observed: ObservedRun) -> PilotEvide
 def _retained_plan(confirmation_runs: int) -> RetainedRunPlan:
     if confirmation_runs != 4:
         raise ValueError(
-            "Preflight must reserve four confirmation runs for the 13-run worst case"
+            "Preflight must reserve four confirmation runs for the eight-run worst case"
         )
     return DEFAULT_RETAINED_RUN_PLAN
 
@@ -390,12 +390,14 @@ def run_preflight(
 
     baseline_configs: list[ResolvedConfig] = []
     if selected_evaluation_batch is not None and selected_physical_batch is not None:
-        baseline_configs = build_baseline_matrix(
-            model_path,
-            retained_output_root,
-            selected_physical_batch,
-            selected_evaluation_batch,
-        )
+        baseline_configs = [
+            build_baseline_config(
+                model_path,
+                retained_output_root,
+                selected_physical_batch,
+                selected_evaluation_batch,
+            )
+        ]
     manifest = build_compute_gate_manifest(
         hardware=hardware,
         smoke=smoke,
@@ -432,7 +434,7 @@ def authorize_rank_configs(
     resolved_config_root: Path,
     retained_output_root: Path,
 ) -> dict[str, Any]:
-    """Derive and authorize ranks 2/4/16 from one authorized baseline config."""
+    """Derive and authorize ranks 2/4/16 from the verified fixed-cell baseline."""
 
     manifest = _read_json_object(gate_manifest_path)
     selection = _read_json_object(baseline_selection_manifest_path)
@@ -457,7 +459,7 @@ def authorize_rank_configs(
         or selection.get("artifact_kind") != "baseline-selection"
         or selection.get("status") != "verified"
         or not isinstance(completed_hashes, list)
-        or len(completed_hashes) != 6
+        or len(completed_hashes) != 1
         or set(completed_hashes)
         != set(baseline_authorization["config_sha256"])
         or selection.get("selected_config_sha256") != selected.sha256

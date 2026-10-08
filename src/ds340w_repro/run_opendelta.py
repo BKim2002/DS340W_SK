@@ -249,11 +249,7 @@ def enforce_compute_gate(
     if validated_preflight_phase(config) is not None:
         return
 
-    baseline_ids = {
-        f"baseline-r8-lr{learning_rate}-eb{effective_batch}"
-        for learning_rate in ("1e-4", "5e-4", "1e-3")
-        for effective_batch in (16, 32)
-    }
+    baseline_ids = {"baseline-r8-lr1e-4-eb16"}
     if config.experiment_id in baseline_ids:
         stage = "baseline"
     elif config.experiment_id in {"rank-r2", "rank-r4", "rank-r16"}:

@@ -8,7 +8,7 @@ import subprocess
 import pytest
 
 from ds340w_repro.build_matrix import (
-    build_baseline_matrix,
+    build_baseline_config,
     build_evaluation_calibration_config,
     build_pilot_config,
     build_rank_matrix,
@@ -141,13 +141,11 @@ def test_stop_gate_allows_only_the_bounded_week1_smoke(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     smoke = build_smoke_config(Path("model"), Path("smoke"))
-    baseline = build_baseline_matrix(
-        Path("model"), Path("runs"), 1, 1
-    )[0]
+    baseline = build_baseline_config(Path("model"), Path("runs"), 1, 1)
     smoke_path = tmp_path / "smoke.json"
     baseline_path = tmp_path / "baseline.json"
     rank = build_rank_matrix(
-        Path("model"), Path("runs"), 1, 1, 1e-3, 32, Path("rank8")
+        Path("model"), Path("runs"), 1, 1, 1e-4, 16, Path("rank8")
     )[0]
     rank_path = tmp_path / "rank.json"
     final = ResolvedConfig(

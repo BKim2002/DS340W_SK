@@ -52,7 +52,7 @@ def test_cli_dry_run_declares_all_three_preflight_phases(tmp_path: Path) -> None
         "warmup_steps_excluded": 20,
     }
     assert plan["final_unseen_access"] is False
-    assert plan["retained_run_plan"]["training_runs"] == 13
+    assert plan["retained_run_plan"]["training_runs"] == 8
     assert plan["retained_run_plan"]["stages"][-1] == {
         "name": "confirmation",
         "training_runs": 4,
@@ -199,7 +199,9 @@ def test_preflight_orchestrates_fresh_attempts_and_writes_baseline_gate(
     assert manifest["decision"]["status"] == "PASS"
     assert manifest["authorization"]["baseline"]["authorized"] is True
     assert manifest["authorization"]["rank"]["authorized"] is False
-    assert len(list((config_root / "baseline").glob("*.json"))) == 6
+    assert [path.stem for path in (config_root / "baseline").glob("*.json")] == [
+        "baseline-r8-lr1e-4-eb16"
+    ]
     assert json.loads(gate_path.read_text(encoding="utf-8")) == manifest
 
     selected_baseline = sorted((config_root / "baseline").glob("*.json"))[0]
