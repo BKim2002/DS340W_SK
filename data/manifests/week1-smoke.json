@@ -4,62 +4,62 @@
     {
       "relative_path": "resolved-config.json",
       "role": "resolved-config",
-      "sha256": "02e76337084a6dee78cf20cd17f3b39dd26897568601a4f3998aeefb6297d9cd",
-      "size_bytes": 6955
+      "sha256": "ac84d2f08871898cb67f08510849b11ab2515a5b93c52b35e2bb6198c7b0f5b6",
+      "size_bytes": 6962
     },
     {
       "relative_path": "runner-config.json",
       "role": "original-runner-config",
-      "sha256": "2f31407b3f69c56af077d25a423fed9d4a0b9d5624fa49b42376a5331c39558c",
-      "size_bytes": 2356
+      "sha256": "9f925b86b3d6345208a033c0288af8f16ec5a92808c8ed212de520600a0a99cf",
+      "size_bytes": 2363
     },
     {
       "relative_path": "execution-tree.json",
       "role": "source-provenance",
-      "sha256": "0a2d517eb9d840895cc5b10e4b4df6b0b2cfb116d8f631c69d0f8396f9ffe65e",
-      "size_bytes": 1710
+      "sha256": "19438a5985e80af81ad514c46ae918f06918d37b1b51ac53b3eff74a4467890d",
+      "size_bytes": 1788
     },
     {
       "relative_path": "process-result.json",
       "role": "process-completion",
-      "sha256": "896239beb8564345f594cf89b4340852ccb52af1f075fb903773995cc603288f",
-      "size_bytes": 1331
+      "sha256": "6cb72f6d611d91cf0bc41b21f14b16ebe9dc383c6b5ff335e48ccf9d84de35ee",
+      "size_bytes": 1332
     },
     {
       "relative_path": "train_results.json",
       "role": "training-metrics",
-      "sha256": "09754c06a5dba080246919a3d9e5f0ec0bec968eaa1d10c5e76e3d9d2d01dda1",
-      "size_bytes": 187
+      "sha256": "4d795b8b01d730dfe2baaa4991d10c9d57a0a48707d1b3d4c8a4ef66b33f2657",
+      "size_bytes": 186
     },
     {
       "relative_path": "eval_results.json",
       "role": "generated-evaluation-metrics",
-      "sha256": "b45246fbe4d899f4ebd659168254860a2b2abe157a2c7a84639273da3c7446c6",
+      "sha256": "a83f25885eb9785af8d121715244988db018f25e7304b71dacac0e98439ea775",
       "size_bytes": 181
     },
     {
       "relative_path": "performance_results.json",
       "role": "runtime-memory-metrics",
-      "sha256": "92d29b7ddca7f07fc5e75418e5cd28d9030be2ed9bc0a580f4fcd8599ba3a1c5",
-      "size_bytes": 85
+      "sha256": "ee8e1af8d2e2aa3332349488537fe5ed0d30f9ff03459d57e8e95c0ee5a6600c",
+      "size_bytes": 88
     },
     {
       "relative_path": "all_results.json",
       "role": "combined-metrics",
-      "sha256": "7d7b9c05864fa7d27f83462d5ad5b69b26eb1f9cf1d7b37da9a98b80a31d0ecf",
-      "size_bytes": 431
+      "sha256": "879a927930aefeb25496580a82effda8e7a79c388abb9fd49529270fb4962971",
+      "size_bytes": 433
     },
     {
       "relative_path": "trainer_state.json",
       "role": "final-trainer-state",
-      "sha256": "468a3f0e89a5bf36f4dd3a2a57b6539c8b2fb41ddc3cf472e2e2e04de03bb1f8",
-      "size_bytes": 976
+      "sha256": "95f9460976d7137b5654d49cde2bcf82bb1d28bad403117e66b1b2b32ba08aec",
+      "size_bytes": 983
     },
     {
       "relative_path": "checkpoint-1/trainer_state.json",
       "role": "step-one-trainer-state",
-      "sha256": "1a26013e2a1bc4820d20a3e814bc95e6b464af33eaaa8121bbc56802b8912bc2",
-      "size_bytes": 741
+      "sha256": "c82b686c059f259d64d2abd396f7b0e509b3d62bad1cfb1b8984c86739e778a5",
+      "size_bytes": 749
     },
     {
       "relative_path": "checkpoint-1/optimizer.pt",
@@ -100,7 +100,7 @@
     {
       "relative_path": "reload-verification.json",
       "role": "native-delta-reload-check",
-      "sha256": "9290cd745569456e88eadc128b3162ebaf0a695034dcaebce0113ebabb0c33fe",
+      "sha256": "c76f30d4f9ce33540b0db39947fb3e7bc42d78731bb72bf189df49f3ca1ba46a",
       "size_bytes": 1770
     }
   ],
@@ -122,8 +122,8 @@
     "experiment_id": "week1-smoke-r8",
     "max_steps": 1,
     "rank": 8,
-    "resolved_config_sha256": "02e76337084a6dee78cf20cd17f3b39dd26897568601a4f3998aeefb6297d9cd",
-    "runner_config_sha256": "2f31407b3f69c56af077d25a423fed9d4a0b9d5624fa49b42376a5331c39558c",
+    "resolved_config_sha256": "ac84d2f08871898cb67f08510849b11ab2515a5b93c52b35e2bb6198c7b0f5b6",
+    "runner_config_sha256": "9f925b86b3d6345208a033c0288af8f16ec5a92808c8ed212de520600a0a99cf",
     "runner_payload_matches_resolved_config": true,
     "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
     "test_indices_sha256": "83d6bdad006418cd841167d938f835561dc13b9ccd464ad21ebe7dabeb0b2394"
@@ -140,14 +140,14 @@
       "Test"
     ]
   },
-  "environment_lock_sha256": "6dee7a18ad3e8d721b9e3c454a606d8a21d93e6917ffe79523f2c5a69eb1ce14",
+  "environment_lock_sha256": "1bd526e57ab6a338e663e2928172183f6df98a62a93b944cf6b6d832da5e4bb1",
   "evaluation": {
     "accuracy": 0.0,
     "course_partition": "Test",
     "evaluated_samples": 1,
     "generation_path_exercised": true,
     "loss": 6.005116939544678,
-    "runtime_seconds": 4.5851
+    "runtime_seconds": 4.6964
   },
   "evidence_gaps": [],
   "inputs": {
@@ -166,7 +166,7 @@
   },
   "measurement": {
     "upstream_peak_memory_gb": 0.979419921875,
-    "upstream_training_time_minutes": 0.09266904296875
+    "upstream_training_time_minutes": 0.09813216959635417
   },
   "process": {
     "course_data_binding": {
@@ -180,17 +180,17 @@
     },
     "exit_code": 0,
     "final_unseen_file_exposed_to_child": false,
-    "finished_at_utc": "2026-09-27T01:38:01.658521+00:00",
+    "finished_at_utc": "2026-10-08T14:18:31.226486+00:00",
     "model_input_binding": {
       "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
       "verified": true
     },
     "private_root_exposed_to_child": false,
-    "project_git_commit": "3e56856e6e5902779019d41aa71aa71116c4cc6b",
+    "project_git_commit": "a9219a162522aa285c508152525992d8cd3b7fa3",
     "project_worktree_clean": true,
     "runner_relative_path": "examples/legacies/examples_seq2seq/run_seq2seq.py",
-    "started_at_utc": "2026-09-27T01:37:43.740869+00:00",
-    "wall_seconds": 17.91767633400002
+    "started_at_utc": "2026-10-08T14:18:10.025356+00:00",
+    "wall_seconds": 21.201160920999996
   },
   "schema_version": 1,
   "scope_note": "Execution smoke only; these metrics are not a reproduction result.",
@@ -204,7 +204,7 @@
   "training": {
     "global_step": 1,
     "train_loss": 10.914900779724121,
-    "train_runtime_seconds": 5.2865,
+    "train_runtime_seconds": 5.458,
     "train_samples": 1
   },
   "upstream": {
