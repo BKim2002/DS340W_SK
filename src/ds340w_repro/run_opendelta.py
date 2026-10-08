@@ -10,6 +10,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tarfile
@@ -254,7 +255,7 @@ def enforce_compute_gate(
         stage = "baseline"
     elif config.experiment_id in {"rank-r2", "rank-r4", "rank-r16"}:
         stage = "rank"
-    elif config.experiment_id.startswith("confirmation-r"):
+    elif re.fullmatch(r"confirmation-r(2|4|8|16)-seed(17|23)", config.experiment_id):
         stage = "confirmation"
     else:
         raise ComputeGateError(

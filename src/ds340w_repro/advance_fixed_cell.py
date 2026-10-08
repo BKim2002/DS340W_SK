@@ -11,7 +11,7 @@ from typing import Any, Sequence
 
 from ds340w_repro.build_matrix import build_confirmation_matrix
 from ds340w_repro.checkpoints import verify_checkpoint_artifact
-from ds340w_repro.config_schema import ResolvedConfig
+from ds340w_repro.config_schema import ResolvedConfig, validate_nonfinal_config
 from ds340w_repro.preflight import authorize_confirmation_stage
 from ds340w_repro.run_preflight import authorize_rank_configs
 
@@ -46,6 +46,7 @@ def _verified_result(
     result = _read_json(manifest_path)
     config_path = config_path.resolve(strict=True)
     config = ResolvedConfig.from_json(config_path.read_text(encoding="utf-8"))
+    validate_nonfinal_config(config)
     if (
         result.get("schema_version") != 1
         or result.get("artifact_kind") != "retained-run-result"
@@ -192,6 +193,24 @@ def advance_to_confirmation(
             config_path=project_root / f"configs/resolved/rank/rank-r{rank}.json",
             expected_experiment_id=f"rank-r{rank}",
         )
+    baseline_predictions = [
+        json.loads(line)
+        for line in (
+            Path(baseline["artifact_path"]) / "predictions.jsonl"
+        ).read_text(encoding="utf-8").splitlines()
+    ]
+    reference_rows = [
+        (row["test_id"], row["label"]) for row in baseline_predictions
+    ]
+    for rank in (2, 4, 16):
+        comparison = [
+            json.loads(line)
+            for line in (
+                Path(results[rank]["artifact_path"]) / "predictions.jsonl"
+            ).read_text(encoding="utf-8").splitlines()
+        ]
+        if [(row["test_id"], row["label"]) for row in comparison] != reference_rows:
+            raise ValueError("Rank results do not align on the same Test examples")
     gate_path = project_root / "data/manifests/compute-gate.json"
     gate = _read_json(gate_path)
     if gate["authorization"]["rank"]["authorized"] is not True:
