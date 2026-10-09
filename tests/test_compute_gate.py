@@ -603,7 +603,24 @@ def test_checked_compute_gate_records_the_fixed_cell_pass_decision() -> None:
     assert checked["projection"]["projected_seconds"] < 48 * 60 * 60
     assert checked["authorization"]["baseline"]["expected_config_count"] == 1
     assert checked["authorization"]["baseline"]["authorized"] is True
-    assert checked["authorization"]["rank"]["authorized"] is False
+    rank_authorization = checked["authorization"]["rank"]
+    if rank_authorization["authorized"]:
+        rank_configs = (
+            PROJECT_ROOT / f"configs/resolved/rank/rank-r{rank}.json"
+            for rank in (2, 4, 16)
+        )
+        assert rank_authorization["expected_config_count"] == 3
+        assert set(rank_authorization["config_sha256"]) == {
+            sha256(path.read_bytes()).hexdigest() for path in rank_configs
+        }
+        selection = json.loads(
+            (PROJECT_ROOT / "data/manifests/baseline-selection.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        assert selection["status"] == "verified"
+    else:
+        assert rank_authorization["config_sha256"] == []
     assert checked["decision"] == {
         "reasons": [],
         "retained_training_authorized": True,

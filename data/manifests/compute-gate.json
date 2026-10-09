@@ -16,8 +16,12 @@
       "selected_rank": null
     },
     "rank": {
-      "authorized": false,
-      "config_sha256": [],
+      "authorized": true,
+      "config_sha256": [
+        "78b381a05e2a881b81ee547a1ae16feb450c6e876d8c0ec1874d1dc74b3b3ded",
+        "c0da6ea19c1556b64a97d23a02cb3a61d756061aecef5390ff4c70241199e79a",
+        "13c0a5ca9c5b509911307478b0a3559dcc5bcb813334f0ac609089e619f355ae"
+      ],
       "expected_config_count": 3,
       "requires_stage": "baseline"
     }

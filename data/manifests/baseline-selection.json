@@ -1,0 +1,14 @@
+{
+  "artifact_kind": "baseline-selection",
+  "completed_config_sha256": [
+    "e757994a75e6c97aaf077bb03b0757d38f8db7f57ad2ed9a047d03e38a0b099c"
+  ],
+  "correct_count": 412,
+  "schema_version": 1,
+  "selected_checkpoint_path": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/artifacts/retained/baseline-r8-lr1e-4-eb16",
+  "selected_checkpoint_sha256": "345ab5ac8319056bde8648e1c0c2286fdf9815ee459d5186b60c1d584816e240",
+  "selected_checkpoint_step": 11600,
+  "selected_config_sha256": "e757994a75e6c97aaf077bb03b0757d38f8db7f57ad2ed9a047d03e38a0b099c",
+  "status": "verified",
+  "updated_projected_gpu_hours": 44.75364935925432
+}
