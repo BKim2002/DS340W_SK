@@ -198,7 +198,14 @@ def collect(*, config_path: Path, artifact_dir: Path) -> dict[str, Any]:
 
     execution = _read_json(output_dir / "execution-tree.json")
     execution_root = Path(str(execution.get("root"))).resolve(strict=True)
-    if not execution_root.is_relative_to(PROJECT_ROOT / "runtime"):
+    allowed_runtime_roots = (
+        PROJECT_ROOT / "runtime",
+        PROJECT_ROOT / "artifacts" / "runtime",
+    )
+    if not any(
+        execution_root.is_relative_to(runtime_root)
+        for runtime_root in allowed_runtime_roots
+    ):
         raise ValueError("Original execution tree is outside this project")
     sys.path.insert(0, str(execution_root))
 

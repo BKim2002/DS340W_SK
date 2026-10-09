@@ -1,0 +1,15 @@
+{
+  "accuracy_percent": 94.72477064220183,
+  "artifact_directory_sha256": "a77c5899beff283f7950331b0884c025d4feb2410d6e62bbd5c7aef919cc4287",
+  "artifact_kind": "retained-run-result",
+  "artifact_manifest_sha256": "9f1af9e781499648563473ce103c1cb78b1c6efd3f9f76e12424f505809d1c9d",
+  "artifact_path": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/artifacts/retained/rank-r2",
+  "checkpoint_step": 10000,
+  "config_sha256": "78b381a05e2a881b81ee547a1ae16feb450c6e876d8c0ec1874d1dc74b3b3ded",
+  "correct_count": 413,
+  "experiment_id": "rank-r2",
+  "final_unseen_accessed": false,
+  "original_process_wall_seconds": 9558.110379776,
+  "schema_version": 1,
+  "status": "verified"
+}
