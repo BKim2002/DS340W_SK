@@ -112,9 +112,36 @@ def completed_training(experiment_id: str) -> bool:
     return True
 
 
-def queue() -> None:
+def wait_for_existing_training(pid: int, experiment_id: str) -> None:
+    """Let a verified existing runner finish during a controller handoff."""
+    if experiment_id not in {f"scaling-r{r}-seed42" for r in RANKS} or pid <= 1:
+        raise ValueError("Invalid existing scaling runner")
+    process_dir = Path(f"/proc/{pid}")
+    if process_dir.exists():
+        command = (process_dir / "cmdline").read_bytes().decode().split("\0")
+        config_path = str(ROOT / f"configs/resolved/scaling/{experiment_id}.json")
+        if "ds340w_repro.run_opendelta" not in command or config_path not in command:
+            raise ValueError("PID does not identify the expected OpenDelta runner")
+        while process_dir.exists():
+            try:
+                state = (process_dir / "stat").read_text().split(") ", 1)[1].split()[0]
+            except FileNotFoundError:
+                break
+            if state == "Z":
+                break
+            time.sleep(5)
+    if not completed_training(experiment_id):
+        raise ValueError("Existing runner exited without completing training")
+
+
+def queue(wait_for_pid: int | None = None, experiment_id: str | None = None) -> None:
     job = ROOT / "artifacts/scaling-sweep-status.json"
     try:
+        if wait_for_pid is not None:
+            write(job, {"status": "running", "active_experiment": experiment_id,
+                        "phase": "waiting_for_existing_training", "runner_pid": wait_for_pid,
+                        "pid": os.getpid(), "updated_at_utc": datetime.now(timezone.utc).isoformat()})
+            wait_for_existing_training(wait_for_pid, experiment_id)
         for rank in RANKS:
             experiment_id = f"scaling-r{rank}-seed42"
             manifest = f"data/manifests/retained-{experiment_id}.json"
@@ -162,6 +189,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("prepare", "probe", "verify", "budget", "queue", "launch"))
     parser.add_argument("--experiment-id")
+    parser.add_argument("--wait-for-pid", type=int)
     args = parser.parse_args()
     for name in ("DS340W_PRIVATE_ROOT", "DS340W_SST2_FINAL_FILE"):
         os.environ.pop(name, None)
@@ -179,7 +207,7 @@ def main() -> None:
     elif args.action == "budget":
         print(json.dumps(budget(), indent=2))
     elif args.action == "queue":
-        queue()
+        queue(args.wait_for_pid, args.experiment_id)
     elif args.action == "launch":
         result = budget()
         if result["status"] != "PASS":
@@ -189,7 +217,12 @@ def main() -> None:
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
             path = path.with_name(f"scaling-sweep-launch-{stamp}.log")
         with path.open("x") as stream:
-            child = subprocess.Popen([sys.executable, __file__, "queue"], cwd=ROOT,
+            command = [sys.executable, __file__, "queue"]
+            if args.wait_for_pid is not None:
+                if not args.experiment_id:
+                    raise ValueError("Existing runner handoff requires its experiment ID")
+                command.extend(["--wait-for-pid", str(args.wait_for_pid), "--experiment-id", args.experiment_id])
+            child = subprocess.Popen(command, cwd=ROOT,
                                      stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
         print(json.dumps({"pid": child.pid, "log": str(path)}))
 

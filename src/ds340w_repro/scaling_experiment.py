@@ -106,6 +106,20 @@ def prepare_configs(root: Path) -> list[Path]:
     return paths
 
 
+def _historical_probe_evidence(root: Path) -> list[dict]:
+    evidence = []
+    for path in (root / "artifacts").rglob("process-result.json"):
+        relative = path.relative_to(root / "artifacts")
+        # Retained artifacts contain copies of execution records, not new work.
+        if relative.parts[0] in ("runs", "retained", "preflight-2026-10-08-fixed-cell", "fixed-cell-smoke-2026-10-08"):
+            continue
+        seconds = load(path).get("wall_seconds")
+        if type(seconds) in (int, float) and math.isfinite(seconds) and seconds >= 0:
+            evidence.append({"path": path.relative_to(root).as_posix(),
+                             "sha256": digest(path), "wall_seconds": seconds})
+    return evidence
+
+
 def forecast(root: Path) -> dict:
     """Use matched measured pilots, retaining four future original confirmations."""
     from ds340w_repro.advance_fixed_cell import _verified_result
@@ -162,16 +176,7 @@ def forecast(root: Path) -> dict:
     verification_seconds = sum(load(path).get("wall_seconds", 0)
                                for path in (root / "artifacts/runs").glob("scaling-*/reload-verification.json"))
     old_preflight = gate["projection"]["actual_preflight_seconds"]
-    historical_probes = []
-    for path in (root / "artifacts").rglob("process-result.json"):
-        relative = path.relative_to(root / "artifacts")
-        if relative.parts[0] in ("runs", "preflight-2026-10-08-fixed-cell", "fixed-cell-smoke-2026-10-08"):
-            continue
-        value = load(path)
-        seconds = value.get("wall_seconds")
-        if type(seconds) in (int, float) and math.isfinite(seconds) and seconds >= 0:
-            historical_probes.append({"path": path.relative_to(root).as_posix(),
-                                      "sha256": digest(path), "wall_seconds": seconds})
+    historical_probes = _historical_probe_evidence(root)
     historical_probe_seconds = sum(item["wall_seconds"] for item in historical_probes)
     # Earlier ad hoc demo/reload calls have no elapsed-time ledger. Reserve ten
     # minutes for them explicitly instead of claiming they cost zero seconds.
