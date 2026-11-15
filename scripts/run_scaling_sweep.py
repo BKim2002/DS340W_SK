@@ -102,13 +102,17 @@ def queue() -> None:
     try:
         for rank in RANKS:
             experiment_id = f"scaling-r{rank}-seed42"
+            manifest = f"data/manifests/retained-{experiment_id}.json"
             gate = budget()
             if gate["status"] != "PASS":
                 raise RuntimeError(f"48-hour cap conflict: {gate['projection']['projected_gpu_hours']:.2f} hours")
+            # The budget verifier has already checked any completed result.
+            if (ROOT / manifest).exists():
+                print(f"Reusing verified completed result: {experiment_id}", flush=True)
+                continue
             write(job, {"status": "running", "active_experiment": experiment_id,
                         "pid": os.getpid(), "updated_at_utc": datetime.now(timezone.utc).isoformat()})
             run_one(experiment_id)
-            manifest = f"data/manifests/retained-{experiment_id}.json"
             subprocess.run([sys.executable, "scripts/collect_retained_result.py", "--config",
                             f"configs/resolved/scaling/{experiment_id}.json", "--artifact-dir",
                             f"artifacts/retained/{experiment_id}", "--result-manifest", manifest],
