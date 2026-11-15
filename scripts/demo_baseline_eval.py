@@ -105,12 +105,7 @@ def main() -> int:
     correct = sum(label == prediction for _, label, prediction in observed)
     if correct != EXPECTED_CORRECT:
         raise ValueError("Live accuracy differs from the retained result")
-    print("Original OpenDelta loader: OK")
-    print("Retained rank-8 checkpoint: step 11600, verified")
     print(f"Course Test: {correct}/{len(observed)} correct ({correct / len(observed):.2%})")
-    print(f"Evaluation loss: {loss:.6f}")
-    print("All 436 live predictions match the retained record.")
-    print("Training: none. Final Unseen split: not accessed. Retained files: unchanged.")
     return 0
 
 
