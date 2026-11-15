@@ -1,5 +1,6 @@
 *.in text eol=lf
 *.json text eol=lf
+*.jsonl text eol=lf
 *.lock text eol=lf
 *.patch text eol=lf
 *.py text eol=lf
