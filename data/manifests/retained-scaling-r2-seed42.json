@@ -1,0 +1,16 @@
+{
+  "accuracy_percent": 94.4954128440367,
+  "artifact_directory_sha256": "20af99ff60c654cd64d2bdf63a71b4a7bead7d267f9dc89fa78d0bb4ae29a413",
+  "artifact_kind": "retained-run-result",
+  "artifact_manifest_sha256": "7ac6a4e7978b23ef29ad2b3f9066f2cb8441b1b80ad7f0bcc4c2b33ca9016125",
+  "artifact_path": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/artifacts/retained/scaling-r2-seed42",
+  "checkpoint_step": 10100,
+  "config_sha256": "84fa819c6f3b423e7b0b77f0b41c8a43e07d1e739e2b423d8a8e82f5d869e866",
+  "correct_count": 412,
+  "experiment_id": "scaling-r2-seed42",
+  "final_unseen_accessed": false,
+  "observer_wall_seconds": 15.386931458000618,
+  "original_process_wall_seconds": 10664.421734184001,
+  "schema_version": 1,
+  "status": "verified"
+}
