@@ -1,0 +1,16 @@
+{
+  "accuracy_percent": 95.41284403669725,
+  "artifact_directory_sha256": "09b0dbac1c629b97fd69dd33e81d54f31d865f55153558f84c7e7bc16598c451",
+  "artifact_kind": "retained-run-result",
+  "artifact_manifest_sha256": "79ebd58c32435b4edd5facfba97a5c16d4ebf0acc6580a3731988ad84bc73fd1",
+  "artifact_path": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/artifacts/retained/scaling-r8-seed42",
+  "checkpoint_step": 16000,
+  "config_sha256": "0126152216d377dc27cf0d038a07c3395f4baba16f299be51c22e35f11fe4a93",
+  "correct_count": 416,
+  "experiment_id": "scaling-r8-seed42",
+  "final_unseen_accessed": false,
+  "observer_wall_seconds": 13.704342527002154,
+  "original_process_wall_seconds": 9561.702778526997,
+  "schema_version": 1,
+  "status": "verified"
+}

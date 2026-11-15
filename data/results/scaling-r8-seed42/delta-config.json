@@ -1,0 +1,26 @@
+{
+  "backbone_checkpoint_name": null,
+  "backbone_class": null,
+  "backbone_hash": null,
+  "common_structure": true,
+  "delta_type": "lora",
+  "exclude_modules": [
+    "lm_head"
+  ],
+  "lora_alpha": 16,
+  "lora_dropout": 0.0,
+  "lora_r": 8,
+  "lora_scaling_mode": "sqrt_rank",
+  "modified_modules": [
+    "attn@.q@",
+    "attn@.v@",
+    "crossattn@.q@",
+    "crossattn@.v@"
+  ],
+  "opendelta_version": "0.3.0",
+  "transformers_version": "4.20.1",
+  "unfrozen_modules": [
+    "deltas",
+    "layer_norm@"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "applied_patch_sha256": [
+    "df8f3d60424a3885516942e83aa2a84bb58a25b7a4f8235f2fae58e42d63477a",
+    "cc0d3ad6867011ac112a56f834b4d799aebbb0602fcf1150682284683a56b8ed",
+    "7f02958a6a1e01bbe4e39e88d17ed90a375f234af58d735fc0dc9c6bef2b4276",
+    "5e442b7644af39d4fa0d42ebaa5a0e100e085a0e2a797cbc92709c4e5dd63abf",
+    "fdb3f2f1fe8529192aad4fcd733225bfe92fe76caca7c2bb58cebce27e75506d",
+    "e56b29cb63cc78b4e2553269e3e7bebbc36759c73820fac09678ab2e0a5c43de",
+    "585e84715bb74c6b6e5518205c11665507b5827b3f3cb26373fc3b852c917f2e"
+  ],
+  "course_data_binding": {
+    "course_data_manifest_sha256": "400143658894e4460f67d8e96dc2e69225150d1ed9ec15ec3da3cef0f37bff66",
+    "final_unseen_exposed": false,
+    "test_sha256": "f66182758e73fc1c7918d68810c57dc2699f5fda59ebc9be6ebc78af1758c575",
+    "training_sha256": "af58ad63483a33861ded0d2bb688f7f5394ebd6784ebea953add529a572e6652",
+    "verified": true,
+    "visible_partitions": [
+      "Training",
+      "Test"
+    ]
+  },
+  "model_input_binding": {
+    "file_count": 7,
+    "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
+    "verified": true
+  },
+  "patch_series": "patches/scaling-series.json",
+  "patch_series_sha256": "bedc7b46663e0bec9f652fe036841d9fdec19924abcdfd0f4716d760f6488ddc",
+  "post_patch_runner_sha256": "d0c67801f7ab997fa3ef118a982b669661c580bc63fc33af9466fce698663a56",
+  "pre_patch_runner_sha256": "64746fa2643709fe4b22a5572ed8936f1dc9fe8764c6148b8ff6ac9bda4c7a47",
+  "project_git_commit": "4140e5dd5c49d05a7dd26d4934b5cf48c96e88c1",
+  "project_worktree_clean": true,
+  "resolved_config_sha256": "0126152216d377dc27cf0d038a07c3395f4baba16f299be51c22e35f11fe4a93",
+  "root": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/runtime/scaling-r8-seed42",
+  "runner": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/runtime/scaling-r8-seed42/examples/legacies/examples_seq2seq/run_seq2seq.py",
+  "runner_config_sha256": "3fd152e83b6bc5af5de9f605e5725c4bfd92eedeb8944ccb919b5351f56d1c34",
+  "upstream_commit": "20e426f716ea53618657cd34bbfc4b347b98cd74"
+}
