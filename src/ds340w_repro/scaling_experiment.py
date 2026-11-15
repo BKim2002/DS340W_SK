@@ -149,6 +149,7 @@ def forecast(root: Path) -> dict:
     original_per_run = max(run_seconds["original"], max(completed))
     modified_per_run = run_seconds["sqrt_rank"]
     modified_completed = []
+    completed_observer_seconds = 0.0
     for rank in RANKS:
         name = f"scaling-r{rank}-seed42"
         path = root / f"data/manifests/retained-{name}.json"
@@ -157,28 +158,48 @@ def forecast(root: Path) -> dict:
                                       config_path=root / f"configs/resolved/scaling/{name}.json",
                                       expected_experiment_id=name)
             modified_completed.append(result["original_process_wall_seconds"])
-    verification_seconds = sum(load(root / item["path"]).get("wall_seconds", 0)
-                               for item in evidence if item["path"].endswith("reload-verification.json"))
+            completed_observer_seconds += result.get("observer_wall_seconds", 30.0)
+    verification_seconds = sum(load(path).get("wall_seconds", 0)
+                               for path in (root / "artifacts/runs").glob("scaling-*/reload-verification.json"))
     old_preflight = gate["projection"]["actual_preflight_seconds"]
+    historical_probes = []
+    for path in (root / "artifacts").rglob("process-result.json"):
+        relative = path.relative_to(root / "artifacts")
+        if relative.parts[0] in ("runs", "preflight-2026-10-08-fixed-cell", "fixed-cell-smoke-2026-10-08"):
+            continue
+        value = load(path)
+        seconds = value.get("wall_seconds")
+        if type(seconds) in (int, float) and math.isfinite(seconds) and seconds >= 0:
+            historical_probes.append({"path": path.relative_to(root).as_posix(),
+                                      "sha256": digest(path), "wall_seconds": seconds})
+    historical_probe_seconds = sum(item["wall_seconds"] for item in historical_probes)
+    # Earlier ad hoc demo/reload calls have no elapsed-time ledger. Reserve ten
+    # minutes for them explicitly instead of claiming they cost zero seconds.
+    unmetered_history_allowance = 600.0
     final_evaluations = 2 * max(
         load(root / f"artifacts/runs/scaling-pilot-{mode}-r16/preflight-timing.json")["evaluation_measurements_seconds"][-1]
         for mode in ("original", "sqrt_rank")
     )
-    projected = old_preflight + probe_seconds + verification_seconds + 1.2 * (
+    projected = old_preflight + historical_probe_seconds + unmetered_history_allowance + probe_seconds + verification_seconds + completed_observer_seconds + 1.2 * (
         sum(completed) + sum(modified_completed) + 4 * original_per_run
-        + (4 - len(modified_completed)) * modified_per_run + final_evaluations
+        + (4 - len(modified_completed)) * (modified_per_run + 30.0) + final_evaluations
     )
     return {
         "schema_version": 1, "assessment_kind": "Week-11-expanded-scaling-plan",
         "status": "PASS" if projected <= 48 * 3600 else "STOP",
         "config_sha256": [build_scaling_config(root, rank).sha256 for rank in RANKS],
         "patch_series_sha256": digest(root / SERIES), "pilot_evidence": evidence,
+        "historical_probe_evidence": historical_probes,
         "projection": {"total_training_runs": 12, "completed_original_runs": 4,
                        "new_modified_runs": 4, "deferred_original_confirmation_runs": 4,
                        "completed_modified_runs": len(modified_completed),
                        "remaining_modified_runs": 4-len(modified_completed),
                        "completed_training_seconds": sum(completed),
                        "previous_preflight_seconds": old_preflight, "new_probe_seconds": probe_seconds,
+                       "additional_historical_probe_seconds": historical_probe_seconds,
+                       "unmetered_historical_evaluation_allowance_seconds": unmetered_history_allowance,
+                       "completed_modified_observer_seconds": completed_observer_seconds,
+                       "future_reload_seconds_per_modified_run": 30.0,
                        "reload_verification_seconds": verification_seconds,
                        "original_seconds_per_future_run": original_per_run,
                        "modified_seconds_per_future_run": modified_per_run,

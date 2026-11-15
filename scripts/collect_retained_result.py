@@ -16,6 +16,7 @@ import math
 import os
 from pathlib import Path
 import sys
+import time
 from typing import Any
 
 
@@ -173,6 +174,7 @@ def _predict_test(
 
 
 def collect(*, config_path: Path, artifact_dir: Path) -> dict[str, Any]:
+    observer_started = time.perf_counter()
     from ds340w_repro.checkpoints import (
         build_prediction_records, preserve_checkpoint_artifact,
         validate_checkpoint_reload, verify_checkpoint_artifact,
@@ -291,6 +293,7 @@ def collect(*, config_path: Path, artifact_dir: Path) -> dict[str, Any]:
         "artifact_directory_sha256": _directory_sha256(preserved.artifact_dir),
         "original_process_wall_seconds": process["wall_seconds"],
         "final_unseen_accessed": False,
+        "observer_wall_seconds": time.perf_counter() - observer_started,
     }
 
 
