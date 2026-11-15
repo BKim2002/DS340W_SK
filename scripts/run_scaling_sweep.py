@@ -117,7 +117,19 @@ def queue() -> None:
                             f"configs/resolved/scaling/{experiment_id}.json", "--artifact-dir",
                             f"artifacts/retained/{experiment_id}", "--result-manifest", manifest],
                            cwd=ROOT, check=True)
-            subprocess.run(["git", "add", "--", manifest], cwd=ROOT, check=True)
+            # Publish lightweight evidence as result data, keeping checkpoints,
+            # large logs, and course documents outside the Git repository.
+            data_dir = ROOT / f"data/results/{experiment_id}"
+            data_dir.mkdir(parents=True, exist_ok=False)
+            run_dir = ROOT / f"artifacts/runs/{experiment_id}"
+            retained = ROOT / f"artifacts/retained/{experiment_id}"
+            for name in ("metrics.json", "predictions.jsonl"):
+                shutil.copy2(retained / name, data_dir / name)
+            for name in ("adapter-gradients.jsonl", "parameter-counts.json", "cuda-memory.json",
+                         "execution-tree.json", "process-result.json", "delta-config.json"):
+                shutil.copy2(run_dir / name, data_dir / name)
+            write(data_dir / "loss-history.json", {"log_history": load(run_dir / "trainer_state.json")["log_history"]})
+            subprocess.run(["git", "add", "--", manifest, str(data_dir)], cwd=ROOT, check=True)
             subprocess.run(["git", "commit", "-m", f"data: verify retained {experiment_id} result"], cwd=ROOT, check=True)
         subprocess.run(["git", "push", "origin", "HEAD"], cwd=ROOT, check=True)
         write(job, {"status": "complete", "experiments": [f"scaling-r{r}-seed42" for r in RANKS],
