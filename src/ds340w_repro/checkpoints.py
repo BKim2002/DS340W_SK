@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import shutil
 import tempfile
+import time
 from typing import Any, Mapping, Sequence
 
 
@@ -166,6 +167,30 @@ def validate_checkpoint_reload(
         )
 
 
+def _publish_staged_artifact(staged: Path, artifact_dir: Path) -> None:
+    """Publish exclusively, allowing for Windows filesystem sharing locks."""
+
+    for attempt in range(8):
+        if artifact_dir.exists():
+            raise FileExistsError(f"Artifact directory already exists: {artifact_dir}")
+        try:
+            staged.replace(artifact_dir)
+            return
+        except PermissionError:
+            if attempt < 7:
+                time.sleep(min(0.25 * 2**attempt, 2.0))
+
+    # Some Windows-backed mounts keep denying directory renames. Create the
+    # destination exclusively and publish its manifest only after copying all
+    # other files, so an incomplete copy cannot pass artifact verification.
+    def omit_root_manifest(directory: str, names: list[str]) -> list[str]:
+        return ["manifest.json"] if Path(directory) == staged else []
+
+    shutil.copytree(staged, artifact_dir, ignore=omit_root_manifest)
+    shutil.copy2(staged / "manifest.json", artifact_dir / "manifest.json")
+    verify_checkpoint_artifact(artifact_dir)
+
+
 def preserve_checkpoint_artifact(
     *,
     source_checkpoint: Path,
@@ -250,7 +275,7 @@ def preserve_checkpoint_artifact(
         manifest_path.write_bytes(
             _canonical_json_bytes({"files": files, "schema_version": 1})
         )
-        staged.replace(artifact_dir)
+        _publish_staged_artifact(staged, artifact_dir)
 
     final_manifest = artifact_dir / "manifest.json"
     return PreservedCheckpointArtifact(

@@ -119,9 +119,22 @@ def test_checkpoint_reload_rejects_count_or_loss_drift() -> None:
         )
 
 
+@pytest.mark.parametrize("publication_failure", ("none", "once", "persistent"))
 def test_preservation_copies_native_outputs_and_writes_a_hash_manifest(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, publication_failure: str,
 ) -> None:
+    replace = Path.replace
+    failures = []
+
+    def sharing_lock(path, target):
+        if path.name == "artifact" and publication_failure != "none":
+            if publication_failure == "persistent" or not failures:
+                failures.append(path)
+                raise PermissionError("simulated Windows directory sharing lock")
+        return replace(path, target)
+
+    monkeypatch.setattr(Path, "replace", sharing_lock)
+    monkeypatch.setattr("ds340w_repro.checkpoints.time.sleep", lambda seconds: None)
     checkpoint = tmp_path / "run" / "checkpoint-200"
     checkpoint.mkdir(parents=True)
     native_weights = checkpoint / "pytorch_model.bin"
@@ -174,6 +187,9 @@ def test_preservation_copies_native_outputs_and_writes_a_hash_manifest(
         "resolved-config.json",
         "trainer-state.json",
     }
+    assert verify_checkpoint_artifact(artifact_dir)["valid"] is True
+    if publication_failure != "none":
+        assert len(failures) == (1 if publication_failure == "once" else 8)
 
 
 def test_artifact_verification_rejects_post_preservation_changes(

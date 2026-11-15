@@ -97,6 +97,21 @@ def run_one(experiment_id: str) -> None:
                                      "wall_seconds": time.perf_counter()-started}) + "\n")
 
 
+def completed_training(experiment_id: str) -> bool:
+    """Recover a completed run without invoking training a second time."""
+    directory = ROOT / f"artifacts/runs/{experiment_id}"
+    process_path = directory / "process-result.json"
+    if not process_path.exists():
+        return False
+    config = ResolvedConfig.from_json((ROOT / f"configs/resolved/scaling/{experiment_id}.json").read_text())
+    process = load(process_path)
+    state = load(directory / "trainer_state.json")
+    if (process.get("exit_code") != 0 or state.get("global_step") != 20_000
+            or process.get("resolved_config_sha256") != config.sha256):
+        raise ValueError(f"Existing run is incomplete or its configuration differs: {experiment_id}")
+    return True
+
+
 def queue() -> None:
     job = ROOT / "artifacts/scaling-sweep-status.json"
     try:
@@ -112,7 +127,10 @@ def queue() -> None:
                 continue
             write(job, {"status": "running", "active_experiment": experiment_id,
                         "pid": os.getpid(), "updated_at_utc": datetime.now(timezone.utc).isoformat()})
-            run_one(experiment_id)
+            if completed_training(experiment_id):
+                print(f"Collecting already completed training: {experiment_id}", flush=True)
+            else:
+                run_one(experiment_id)
             subprocess.run([sys.executable, "scripts/collect_retained_result.py", "--config",
                             f"configs/resolved/scaling/{experiment_id}.json", "--artifact-dir",
                             f"artifacts/retained/{experiment_id}", "--result-manifest", manifest],
@@ -167,6 +185,9 @@ def main() -> None:
         if result["status"] != "PASS":
             raise RuntimeError("Expanded compute projection exceeds 48 hours")
         path = ROOT / "artifacts/scaling-sweep-launch.log"
+        if path.exists():
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+            path = path.with_name(f"scaling-sweep-launch-{stamp}.log")
         with path.open("x") as stream:
             child = subprocess.Popen([sys.executable, __file__, "queue"], cwd=ROOT,
                                      stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
