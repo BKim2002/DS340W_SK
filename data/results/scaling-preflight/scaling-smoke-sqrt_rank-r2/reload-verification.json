@@ -1,0 +1,7 @@
+{
+  "native_and_delta_tensors_identical": true,
+  "passed": true,
+  "scaling_mode": "sqrt_rank",
+  "smoke_only": true,
+  "wall_seconds": 1.1789084799999046
+}

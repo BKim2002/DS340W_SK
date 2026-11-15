@@ -1,0 +1,148 @@
+{
+  "assessment_kind": "Week-11-expanded-scaling-plan",
+  "config_sha256": [
+    "84fa819c6f3b423e7b0b77f0b41c8a43e07d1e739e2b423d8a8e82f5d869e866",
+    "c73945da6e24abb35c772357664c58b6c78883fcf21f6a84063d038f345d2e1e",
+    "0126152216d377dc27cf0d038a07c3395f4baba16f299be51c22e35f11fe4a93",
+    "58bbd75aecc109147d2246791078731d3fb5e6b0786c776508d24402d31e6daf"
+  ],
+  "final_assessment": "Original rank-8 and selected original-rank seed-42 checkpoints remain the declared final candidates; no final Unseen access.",
+  "historical_probe_evidence": [
+    {
+      "path": "artifacts/preflight-2026-09-26/runs/preflight-eval-eb1/process-result.json",
+      "sha256": "395afdab6b149e875f818e87abbbc02b770adbcc805459be1914397bfd6755e5",
+      "wall_seconds": 14.50806414699997
+    },
+    {
+      "path": "artifacts/preflight-2026-09-26/runs/preflight-eval-eb16/process-result.json",
+      "sha256": "f27d66afa4606ca7f32b87f6cd69fd6e47c70bc0376cbf5e288e0f3e22c456a4",
+      "wall_seconds": 16.035751532999996
+    },
+    {
+      "path": "artifacts/preflight-2026-09-26/runs/preflight-eval-eb2/process-result.json",
+      "sha256": "2b151173aec64be99d6fff8494f4b08969b64bbe3d5e4ffcde9658df35016149",
+      "wall_seconds": 15.970801353000013
+    },
+    {
+      "path": "artifacts/preflight-2026-09-26/runs/preflight-eval-eb32/process-result.json",
+      "sha256": "9f629b3bdbff7211c4222a630f6700cb403eb14ae6b3fd7682c8d7c53a4bc2e8",
+      "wall_seconds": 16.277094579999996
+    },
+    {
+      "path": "artifacts/preflight-2026-09-26/runs/preflight-eval-eb4/process-result.json",
+      "sha256": "32982bf6d08b0ab73d3dac4b15e32c3e2f818b346cbac6fcd6b91e7b0fa0685a",
+      "wall_seconds": 15.47414476900002
+    },
+    {
+      "path": "artifacts/preflight-2026-09-26/runs/preflight-eval-eb8/process-result.json",
+      "sha256": "dc545f6f64ea389da901d15405a948390e3603956d93aa5225f0ad3f2603f6a4",
+      "wall_seconds": 15.976160942999996
+    },
+    {
+      "path": "artifacts/preflight-2026-09-27-v2/runs/preflight-eval-eb32/process-result.json",
+      "sha256": "2ff9d60829a5f285d7463f22b53b6d00905849bfe05d0f081ccfaa3f3a7f5252",
+      "wall_seconds": 15.45403302699998
+    },
+    {
+      "path": "artifacts/preflight-2026-09-27-v3/runs/preflight-eval-eb32/process-result.json",
+      "sha256": "c30559de7511bebb9e704c33d37ccae23e5330090d5367ade883542bb3da7680",
+      "wall_seconds": 85.58957755799997
+    },
+    {
+      "path": "artifacts/preflight-2026-09-27-v3/runs/preflight-pilot-r16-pb8-eb32/process-result.json",
+      "sha256": "0972dd190869e6133be3d22be2eda3b82ce8a983a6cf58775f796c0deb08b3f9",
+      "wall_seconds": 193.76139721899995
+    },
+    {
+      "path": "artifacts/preflight-2026-09-27-v3/runs/preflight-train-pb8-eb32/process-result.json",
+      "sha256": "c88982b0953ef537ab5c3c39c5f0cef95767066e2447e4d2f9a3b3efe725e61b",
+      "wall_seconds": 23.991723963000027
+    },
+    {
+      "path": "artifacts/week1-smoke-final/process-result.json",
+      "sha256": "16206b0900329797431b91f1ef2dfe52fd8d79ed35d444a82424587657369a79",
+      "wall_seconds": 20.53837343200007
+    },
+    {
+      "path": "artifacts/week1-smoke-isolated/process-result.json",
+      "sha256": "33c25f135f3a1740d0a4328b59aa7e16c4751dd4a1398331eca438d10a7f81ab",
+      "wall_seconds": 22.50625723799999
+    },
+    {
+      "path": "artifacts/week1-smoke-isolated-v2/process-result.json",
+      "sha256": "0e4e7e6de5200056d65cb9732bb3326fe8e6e1aa0178fb6522a203daa73bbccb",
+      "wall_seconds": 23.00840692899999
+    },
+    {
+      "path": "artifacts/week1-smoke-practice/process-result.json",
+      "sha256": "ba6a0a3cd322d736e8bf4ba99326d146d0ac9f47318c6fd1dbfcc8197bdeebe9",
+      "wall_seconds": 18.11871584100001
+    },
+    {
+      "path": "artifacts/week1-smoke-recording/process-result.json",
+      "sha256": "c023bc3b83b927df9c02b55a850edfa51a51b5820c0f3895860ddd02ee50aab5",
+      "wall_seconds": 17.968805752
+    },
+    {
+      "path": "artifacts/week4-smoke-cachefix/process-result.json",
+      "sha256": "896239beb8564345f594cf89b4340852ccb52af1f075fb903773995cc603288f",
+      "wall_seconds": 17.91767633400002
+    },
+    {
+      "path": "artifacts/week4-smoke-current/process-result.json",
+      "sha256": "73eca43ac3417f15759673bf9a58b81dee243696eb01c9e1c463725fe960f896",
+      "wall_seconds": 18.000850711
+    }
+  ],
+  "patch_series_sha256": "bedc7b46663e0bec9f652fe036841d9fdec19924abcdfd0f4716d760f6488ddc",
+  "pilot_evidence": [
+    {
+      "path": "artifacts/runs/scaling-pilot-original-r16/process-result.json",
+      "sha256": "4b80e5159a3db630c9451ffc3239d083a4a78b7e649773e37fea47f30e2aa70a"
+    },
+    {
+      "path": "artifacts/runs/scaling-pilot-original-r16/preflight-timing.json",
+      "sha256": "87061ef0c303a926d6293f7a0da389403dbc32b375a6a64c073e8daa4a6e689e"
+    },
+    {
+      "path": "artifacts/runs/scaling-pilot-original-r16/reload-verification.json",
+      "sha256": "f7d6883a88d448fcb81913f483044441a7fcb0339231f198bcdc788f1402fa43"
+    },
+    {
+      "path": "artifacts/runs/scaling-pilot-sqrt_rank-r16/process-result.json",
+      "sha256": "5ee7f8f3d948a7a8c1d959b7c265e1043a940511cbc225e73fa886669773dbc5"
+    },
+    {
+      "path": "artifacts/runs/scaling-pilot-sqrt_rank-r16/preflight-timing.json",
+      "sha256": "433d418ca058a3a2a397d541830ccc0e11e4c8af61ad4aa0ca796ffeb0159eb7"
+    },
+    {
+      "path": "artifacts/runs/scaling-pilot-sqrt_rank-r16/reload-verification.json",
+      "sha256": "bd6e3a36c7fe5fb09b157f8012d5ddeab345d2af07f2a641d436ca2a351f2009"
+    }
+  ],
+  "projection": {
+    "additional_historical_probe_seconds": 551.097835329,
+    "cap_gpu_hours": 48,
+    "completed_modified_observer_seconds": 0.0,
+    "completed_modified_runs": 0,
+    "completed_original_runs": 4,
+    "completed_training_seconds": 38107.31931660601,
+    "deferred_original_confirmation_runs": 4,
+    "future_reload_seconds_per_modified_run": 30.0,
+    "modified_seconds_per_future_run": 10350.349386585105,
+    "new_modified_runs": 4,
+    "new_probe_seconds": 318.88120124,
+    "original_seconds_per_future_run": 10528.228734960885,
+    "previous_preflight_seconds": 356.318702618,
+    "projected_gpu_hours": 41.10268758292388,
+    "projected_seconds": 147969.67529852595,
+    "reload_verification_seconds": 40.801875990999974,
+    "remaining_modified_runs": 4,
+    "reserve_multiplier": 1.2,
+    "total_training_runs": 12,
+    "unmetered_historical_evaluation_allowance_seconds": 600.0
+  },
+  "schema_version": 1,
+  "status": "PASS"
+}

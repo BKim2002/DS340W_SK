@@ -1,0 +1,10 @@
+{
+  "all_predictions_match": true,
+  "correct_count": 266,
+  "eval_loss": 0.2788639093210938,
+  "native_and_delta_tensors_identical": true,
+  "passed": true,
+  "scaling_mode": "original",
+  "test_rows": 436,
+  "wall_seconds": 19.681861413999968
+}

@@ -1,0 +1,43 @@
+{
+  "log_history": [
+    {
+      "epoch": 0.5,
+      "learning_rate": 5e-05,
+      "loss": 7.8481,
+      "step": 1
+    },
+    {
+      "epoch": 0.5,
+      "eval_accuracy": 0.0,
+      "eval_average_metrics": 0.0,
+      "eval_loss": 6.3245930671691895,
+      "eval_runtime": 5.5316,
+      "eval_samples_per_second": 0.181,
+      "step": 1
+    },
+    {
+      "epoch": 1.0,
+      "learning_rate": 0.0,
+      "loss": 8.302,
+      "step": 2
+    },
+    {
+      "epoch": 1.0,
+      "eval_accuracy": 0.0,
+      "eval_average_metrics": 0.0,
+      "eval_loss": 6.291629791259766,
+      "eval_runtime": 3.0829,
+      "eval_samples_per_second": 0.324,
+      "step": 2
+    },
+    {
+      "epoch": 1.0,
+      "step": 2,
+      "total_flos": 1552793149440.0,
+      "train_loss": 8.075076580047607,
+      "train_runtime": 10.5177,
+      "train_samples_per_second": 3.042,
+      "train_steps_per_second": 0.19
+    }
+  ]
+}

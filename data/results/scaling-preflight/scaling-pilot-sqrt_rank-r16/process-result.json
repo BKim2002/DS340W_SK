@@ -1,0 +1,38 @@
+{
+  "argv": [
+    "python",
+    "run_seq2seq.py",
+    "runner-config.json"
+  ],
+  "course_data_binding": {
+    "course_data_manifest_sha256": "400143658894e4460f67d8e96dc2e69225150d1ed9ec15ec3da3cef0f37bff66",
+    "final_unseen_exposed": false,
+    "test_sha256": "f66182758e73fc1c7918d68810c57dc2699f5fda59ebc9be6ebc78af1758c575",
+    "training_sha256": "af58ad63483a33861ded0d2bb688f7f5394ebd6784ebea953add529a572e6652",
+    "verified": true,
+    "visible_partitions": [
+      "Training",
+      "Test"
+    ]
+  },
+  "entrypoint": "examples/legacies/examples_seq2seq/run_seq2seq.py",
+  "exit_code": 0,
+  "finished_at_utc": "2026-11-15T04:42:26.430583+00:00",
+  "model_input_binding": {
+    "file_count": 7,
+    "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
+    "verified": true
+  },
+  "nonfinal_access_enforcement": {
+    "do_test": false,
+    "final_unseen_file_exposed_to_child": false,
+    "private_root_exposed_to_child": false,
+    "unseen_fields_in_config": []
+  },
+  "project_git_commit": "a2e45faac16ad1dc71cb789ebbe06107e6dd8764",
+  "project_worktree_clean": true,
+  "resolved_config_sha256": "31fdc19504159c410be947e6472a88f7781743b2aa23baf2b98cedad894cb782",
+  "schema_version": 1,
+  "started_at_utc": "2026-11-15T04:40:30.509368+00:00",
+  "wall_seconds": 124.56382865900014
+}

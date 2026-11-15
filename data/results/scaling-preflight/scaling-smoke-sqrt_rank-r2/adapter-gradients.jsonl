@@ -1,0 +1,1 @@
+{"A_elements": 110592, "A_rms": 0.0, "B_elements": 110592, "B_rms": 0.002389292241790211, "gradient_accumulation_steps": 2, "measurement": "sqrt(sum(g^2)/number_of_elements), A and B separately; after accumulation and AMP unscaling, before clipping", "step": 1}

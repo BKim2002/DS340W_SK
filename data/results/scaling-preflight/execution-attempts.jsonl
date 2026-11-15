@@ -1,0 +1,3 @@
+{"experiment_id": "scaling-smoke-sqrt_rank-r2", "exit_code": 0, "wall_seconds": 42.89644147299998}
+{"experiment_id": "scaling-pilot-original-r16", "exit_code": 0, "wall_seconds": 139.15963244699992}
+{"experiment_id": "scaling-pilot-sqrt_rank-r16", "exit_code": 0, "wall_seconds": 136.8251273200001}

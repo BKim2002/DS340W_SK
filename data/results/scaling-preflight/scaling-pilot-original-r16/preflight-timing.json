@@ -1,0 +1,11 @@
+{
+  "completed_optimizer_steps": 200,
+  "elapsed_seconds_steps_21_to_end": 95.41285965199995,
+  "evaluation_measurements_seconds": [
+    5.1533,
+    5.2573
+  ],
+  "non_evaluation_seconds_steps_21_to_end": 85.00225965199995,
+  "schema_version": 1,
+  "warmup_steps_excluded": 20
+}
