@@ -1,0 +1,17 @@
+{
+  "accuracy_percent": 95.41284403669725,
+  "correct_count": 416,
+  "eval_loss": 0.08892867524484428,
+  "injected_projections": 72,
+  "layer_norm_parameters": 47616,
+  "lora_parameters": 1769472,
+  "lora_scaling_mode": "sqrt_rank",
+  "original_eval_loss": 0.0889286920428276,
+  "peak_allocated_bytes": 1939699712,
+  "peak_reserved_bytes": 2308964352,
+  "test_rows": 436,
+  "total_parameters": 249304320,
+  "trainable_parameters": 1817088,
+  "upstream_peak_memory_gb": 1.849841796875,
+  "wall_seconds": 9305.892373511997
+}

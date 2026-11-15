@@ -1,0 +1,7 @@
+{
+  "lora_parameters": 1769472,
+  "layer_norm_parameters": 47616,
+  "trainable_parameters": 1817088,
+  "total_parameters": 249304320,
+  "injected_projections": 72
+}
