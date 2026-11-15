@@ -174,6 +174,7 @@ def preserve_checkpoint_artifact(
     predictions: Sequence[PredictionRecord],
     metrics: Mapping[str, Any],
     artifact_dir: Path,
+    extra_files: Mapping[str, Path] | None = None,
 ) -> PreservedCheckpointArtifact:
     """Copy a complete native result into a new checksummed artifact directory."""
 
@@ -230,6 +231,12 @@ def preserve_checkpoint_artifact(
             newline="\n",
         )
         (staged / "metrics.json").write_bytes(_canonical_json_bytes(dict(metrics)))
+        for relative, source in (extra_files or {}).items():
+            target = (staged / relative).resolve()
+            if not target.is_relative_to(staged.resolve()) or target.exists():
+                raise ValueError(f"Unsafe or colliding extra artifact: {relative}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
 
         files = {
             path.relative_to(staged).as_posix(): {

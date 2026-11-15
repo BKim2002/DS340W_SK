@@ -1,0 +1,95 @@
+--- /dev/null
++++ b/examples/legacies/examples_seq2seq/scaling_diagnostics.py
+@@ -0,0 +1,79 @@
++"""Observe fully accumulated, unscaled gradients immediately before clipping."""
++import json
++import math
++from pathlib import Path
++import torch
++from transformers import TrainerCallback
++
++
++def adapter_gradient_rms(named_parameters):
++    result = {}
++    for side in ('A', 'B'):
++        tensors = [p for name, p in named_parameters if name.endswith('.lora_' + side)]
++        count = sum(p.numel() for p in tensors)
++        if not count or any(p.grad is None for p in tensors):
++            raise ValueError('Missing LoRA gradients for ' + side)
++        sum_squares = sum(p.grad.detach().float().square().sum().double() for p in tensors)
++        value = math.sqrt(float(sum_squares.item()) / count)
++        if not math.isfinite(value):
++            raise ValueError('Nonfinite adapter gradient RMS')
++        result[side + '_rms'] = value
++        result[side + '_elements'] = count
++    return result
++
++
++class ScalingDiagnostics(TrainerCallback):
++    def __init__(self, trainer, delta_model):
++        self.trainer = trainer
++        self.delta_model = delta_model
++        self.directory = Path(trainer.args.output_dir)
++        self.path = self.directory / 'adapter-gradients.jsonl'
++
++    def on_train_begin(self, args, state, control, model=None, optimizer=None, **kwargs):
++        if getattr(self.trainer, 'use_apex', False) or getattr(self.trainer, 'deepspeed', None):
++            raise ValueError('Gradient observer supports the locked single-GPU trainer only')
++        if hasattr(optimizer, 'clip_grad_norm') or hasattr(model, 'clip_grad_norm_'):
++            raise ValueError('Gradient observer would replace custom clipping')
++        self.named_parameters = list(model.named_parameters())
++        self.parameters = list(model.parameters())
++        self.delta_model.create_config_from_model()
++        self.delta_model.config.to_json_file(self.directory / 'delta-config.json', use_diff=False)
++        counts = {'lora_parameters': 0, 'layer_norm_parameters': 0, 'trainable_parameters': 0,
++                  'total_parameters': sum(p.numel() for p in self.parameters), 'injected_projections': 0}
++        for name, p in self.named_parameters:
++            if p.requires_grad:
++                counts['trainable_parameters'] += p.numel()
++                if '.lora.lora_' in name:
++                    counts['lora_parameters'] += p.numel()
++                    counts['injected_projections'] += int(name.endswith('.lora_A'))
++                elif 'layer_norm' in name:
++                    counts['layer_norm_parameters'] += p.numel()
++                else:
++                    raise ValueError('Unexpected trainable tensor: ' + name)
++        (self.directory / 'parameter-counts.json').write_text(json.dumps(counts, indent=2) + '\n')
++        self.path.write_text('')
++        # Transformers 4.20 calls this after GradScaler.unscale_ and after all
++        # accumulation microbatches, before performing the optimizer update.
++        optimizer.clip_grad_norm = self.measure_and_clip
++        return control
++
++    def measure_and_clip(self, max_norm):
++        step = self.trainer.state.global_step + 1
++        if step in (1, 10) or step % 100 == 0:
++            row = {'step': step, 'gradient_accumulation_steps': self.trainer.args.gradient_accumulation_steps,
++                   'measurement': 'sqrt(sum(g^2)/number_of_elements), A and B separately; after accumulation and AMP unscaling, before clipping',
++                   **adapter_gradient_rms(self.named_parameters)}
++            with self.path.open('a') as stream:
++                stream.write(json.dumps(row, sort_keys=True) + '\n')
++        return torch.nn.utils.clip_grad_norm_(self.parameters, max_norm)
++
++    def on_save(self, args, state, control, **kwargs):
++        checkpoint = self.directory / ('checkpoint-' + str(state.global_step))
++        self.delta_model.config.to_json_file(checkpoint / 'delta-config.json', use_diff=False)
++        return control
++
++    def on_train_end(self, args, state, control, **kwargs):
++        memory = {'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
++                  'peak_reserved_bytes': torch.cuda.max_memory_reserved()}
++        (self.directory / 'cuda-memory.json').write_text(json.dumps(memory, indent=2) + '\n')
++        return control
+--- a/examples/legacies/examples_seq2seq/run_seq2seq.py
++++ b/examples/legacies/examples_seq2seq/run_seq2seq.py
+@@ -463,6 +463,10 @@
+         evaluation_metrics = TASK_TO_METRICS[data_args.dataset_name[0]],
+     )
+ 
++    if os.environ.get('DS340W_SCALING_DIAGNOSTICS') == '1':
++        from examples_seq2seq.scaling_diagnostics import ScalingDiagnostics
++        trainer.add_callback(ScalingDiagnostics(trainer, delta_model))
++
+     preflight_timing_path = os.environ.get("DS340W_PREFLIGHT_TIMING_PATH")
+     if preflight_timing_path:
+         trainer.add_callback(PreflightTimingCallback(preflight_timing_path))

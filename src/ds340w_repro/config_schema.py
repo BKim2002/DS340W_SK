@@ -92,6 +92,8 @@ class ResolvedConfig:
         """Return only arguments consumed by the authors' parser or OpenDelta."""
 
         wrapper_only = {
+            "patch_series",
+            "record_adapter_gradients",
             "dataset_archive_sha256",
             "dataset_loader_repository",
             "dataset_loader_revision",
@@ -127,6 +129,13 @@ def validate_nonfinal_config(config: ResolvedConfig) -> None:
     """Reject configurations that can touch final-unseen data or drift scientifically."""
 
     values = config.values
+    scaling_mode = values.get("lora_scaling_mode", "original")
+    if scaling_mode not in ("original", "sqrt_rank"):
+        raise ValueError("Unknown LoRA scaling mode")
+    if scaling_mode != "original" and not config.experiment_id.startswith("scaling-"):
+        raise ValueError("Modified scaling requires a distinct scaling experiment ID")
+    if config.experiment_id.startswith("scaling-") and values.get("patch_series") != "patches/scaling-series.json":
+        raise ValueError("Scaling experiments require their reproducible patch series")
     confirmation = re.fullmatch(
         r"confirmation-r(2|4|8|16)-seed(17|23)", config.experiment_id
     )

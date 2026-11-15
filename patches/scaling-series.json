@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "20e426f716ea53618657cd34bbfc4b347b98cd74",
+  "patches": [
+    {
+      "path": "patches/0001-pin-sst2-loader.patch",
+      "sha256": "df8f3d60424a3885516942e83aa2a84bb58a25b7a4f8235f2fae58e42d63477a",
+      "classification": "data-handling",
+      "rationale": "Route SST-2 through verified external Training/Test files and recompute its preprocessing so non-final runs cannot load final-unseen rows or a stale subset cache.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/data_processors/tasks.py"
+      ]
+    },
+    {
+      "path": "patches/0002-guard-optional-splits.patch",
+      "sha256": "cc0d3ad6867011ac112a56f834b4d799aebbb0602fcf1150682284683a56b8ed",
+      "classification": "data-handling",
+      "rationale": "Prevent do_test=false runs from dereferencing or loading a test/final partition.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/run_seq2seq.py"
+      ]
+    },
+    {
+      "path": "patches/0003-fix-local-delta-save.patch",
+      "sha256": "7f02958a6a1e01bbe4e39e88d17ed90a375f234af58d735fc0dc9c6bef2b4276",
+      "classification": "compatibility",
+      "rationale": "Use the pinned OpenDelta local-save API and reject unsupported remote publication.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/run_seq2seq.py"
+      ]
+    },
+    {
+      "path": "patches/0004-transformers-amp-attribute.patch",
+      "sha256": "5e442b7644af39d4fa0d42ebaa5a0e100e085a0e2a797cbc92709c4e5dd63abf",
+      "classification": "compatibility",
+      "rationale": "Use the CUDA AMP state attribute exposed by the locked Transformers 4.20 trainer.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/seq2seq_trainer.py"
+      ]
+    },
+    {
+      "path": "patches/0005-record-preflight-timing.patch",
+      "sha256": "fdb3f2f1fe8529192aad4fcd733225bfe92fe76caca7c2bb58cebce27e75506d",
+      "classification": "observation-only",
+      "rationale": "Record steady-state pilot and evaluation timing through a Trainer callback without changing the authors' training loop.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/run_seq2seq.py"
+      ]
+    },
+    {
+      "path": "patches/0006-optional-lora-scaling.patch",
+      "sha256": "e56b29cb63cc78b4e2553269e3e7bebbc36759c73820fac09678ab2e0a5c43de",
+      "classification": "experimental-scaling",
+      "rationale": "Week 11 opt-in alpha/sqrt(rank) scaling; original alpha/rank remains the default. Credit Kalajdzievski (2023), arXiv:2312.03732. Persist the mode in OpenDelta model configuration.",
+      "touched_paths": [
+        "opendelta/delta_models/lora.py"
+      ]
+    },
+    {
+      "path": "patches/0007-observe-scaling-gradients.patch",
+      "sha256": "585e84715bb74c6b6e5518205c11665507b5827b3f3cb26373fc3b852c917f2e",
+      "classification": "observation-only",
+      "rationale": "Record per-element A/B gradient RMS at the existing optimizer clipping boundary, parameter counts, peak allocated/reserved memory, and the scaling configuration beside every native checkpoint.",
+      "touched_paths": [
+        "examples/legacies/examples_seq2seq/scaling_diagnostics.py",
+        "examples/legacies/examples_seq2seq/run_seq2seq.py"
+      ]
+    }
+  ]
+}

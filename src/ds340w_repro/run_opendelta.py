@@ -38,6 +38,7 @@ ALLOWED_PATCH_CLASSIFICATIONS = {
     "data-handling",
     "provenance",
     "observation-only",
+    "experimental-scaling",
 }
 
 
@@ -49,6 +50,8 @@ class ExecutionTreeReport:
     pre_patch_runner_sha256: str
     post_patch_runner_sha256: str
     applied_patch_sha256: tuple[str, ...]
+    patch_series: str = "patches/series.json"
+    patch_series_sha256: str = ""
 
 
 def _file_sha256(path: Path) -> str:
@@ -236,6 +239,10 @@ def enforce_compute_gate(
     if sha256(resolved_config_path.read_bytes()).hexdigest() != config.sha256:
         raise ValueError("Resolved configuration file is not canonical")
     values = config.values
+    if config.experiment_id.startswith("scaling-"):
+        from ds340w_repro.scaling_experiment import enforce_scaling_gate
+        enforce_scaling_gate(config, gate_manifest_path.parent / "scaling-compute-gate.json")
+        return
     bounded_smoke = (
         config.experiment_id == "week1-smoke-r8"
         and values.get("max_steps") == 1
@@ -270,7 +277,9 @@ def enforce_compute_gate(
     )
 
 
-def prepare_execution_tree(project_root: Path, destination: Path) -> ExecutionTreeReport:
+def prepare_execution_tree(
+    project_root: Path, destination: Path, patch_series: str = "patches/series.json"
+) -> ExecutionTreeReport:
     """Copy pristine OpenDelta source and apply the declared patch series."""
 
     project_root = project_root.resolve(strict=True)
@@ -280,9 +289,10 @@ def prepare_execution_tree(project_root: Path, destination: Path) -> ExecutionTr
     if destination.exists():
         raise FileExistsError(f"Execution tree already exists: {destination}")
 
-    manifest = json.loads(
-        (project_root / "patches" / "series.json").read_text(encoding="utf-8")
-    )
+    if patch_series not in ("patches/series.json", "patches/scaling-series.json"):
+        raise ValueError("Unsupported patch series")
+    series_path = project_root / patch_series
+    manifest = json.loads(series_path.read_text(encoding="utf-8"))
     if manifest["upstream_commit"] != provenance.commit:
         raise ValueError("Patch series and upstream commit do not match")
 
@@ -342,6 +352,8 @@ def prepare_execution_tree(project_root: Path, destination: Path) -> ExecutionTr
         pre_patch_runner_sha256=provenance.runner_sha256,
         post_patch_runner_sha256=_file_sha256(runner),
         applied_patch_sha256=tuple(applied_hashes),
+        patch_series=patch_series,
+        patch_series_sha256=_file_sha256(series_path),
     )
 
 
@@ -375,10 +387,14 @@ def invoke_original_runner(
     course_data_binding, training_path, test_path = verify_course_data_binding(
         config, project_root, cache_root
     )
-    report = prepare_execution_tree(project_root, runtime_dir)
+    report = prepare_execution_tree(
+        project_root, runtime_dir, config.values.get("patch_series", "patches/series.json")
+    )
 
     runner_payload = resolve_runner_payload(config, project_root)
     output_dir = Path(str(runner_payload["output_dir"]))
+    if config.experiment_id.startswith("scaling-") and output_dir.exists():
+        raise FileExistsError(f"Scaling runs require a fresh output directory: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     runner_config = (output_dir / "runner-config.json").resolve()
     runner_config.write_text(
@@ -430,6 +446,9 @@ def invoke_original_runner(
         environment["DS340W_PREFLIGHT_TIMING_PATH"] = str(
             output_dir / "preflight-timing.json"
         )
+    if config.experiment_id.startswith("scaling-"):
+        environment["DS340W_PREFLIGHT_TIMING_PATH"] = str(output_dir / "preflight-timing.json")
+        environment["DS340W_SCALING_DIAGNOSTICS"] = "1"
     started_at = datetime.now(timezone.utc)
     started_clock = time.perf_counter()
     completed = subprocess.run(

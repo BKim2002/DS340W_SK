@@ -1,0 +1,58 @@
+--- a/opendelta/delta_models/lora.py
++++ b/opendelta/delta_models/lora.py
+@@ -21,8 +21,12 @@
+         r=8,
+         lora_alpha=16,
+         lora_dropout=0.0,
++        lora_scaling_mode='original',
+     ):
+         super().__init__()
++        if lora_scaling_mode not in ('original', 'sqrt_rank'):
++            raise ValueError('Unknown LoRA scaling mode: ' + str(lora_scaling_mode))
++        self.lora_scaling_mode = lora_scaling_mode
+         self.r = r
+         self.lora_alpha = lora_alpha
+         self.lora_dropout = lora_dropout
+@@ -33,7 +37,7 @@
+         if r > 0:
+             self.lora_A = nn.Parameter(weight.new_zeros((r, in_features)))
+             self.lora_B = nn.Parameter(weight.new_zeros((out_features, r)))
+-            self.scaling = self.lora_alpha / self.r
++            self.scaling = self.lora_alpha / (math.sqrt(self.r) if self.lora_scaling_mode == 'sqrt_rank' else self.r)
+             nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
+             nn.init.zeros_(self.lora_B)
+ 
+@@ -45,6 +49,7 @@
+     r: int = 8
+     lora_alpha: int = 16
+     lora_dropout: float = 0.0
++    lora_scaling_mode: str = 'original'
+ 
+ class LoraConfig(BaseDeltaConfig):
+     r"""
+@@ -56,6 +61,7 @@
+         lora_r=8,
+         lora_alpha=16,
+         lora_dropout=0.0,
++        lora_scaling_mode='original',
+         **kwargs
+     ):
+         super().__init__(**kwargs)
+@@ -111,6 +117,7 @@
+                  lora_r=8,
+                  lora_alpha=16,
+                  lora_dropout=0.0,
++                 lora_scaling_mode='original',
+                  modified_modules: Optional[List[str]] = None,
+                  unfrozen_modules: Optional[List[str]] = None,
+                  exclude_modules: Optional[List[str]] = None,
+@@ -154,7 +161,8 @@
+                                     weight = child_module.weight,
+                                     r=self.lora_r,
+                                     lora_alpha=self.lora_alpha,
+-                                    lora_dropout=self.lora_dropout)
++                                    lora_dropout=self.lora_dropout,
++                                    lora_scaling_mode=self.lora_scaling_mode)
+         if self.backend == "bmt":
+             import bmtrain as bmt
+             new_module = bmt.BMTrainModelWrapper(new_module)

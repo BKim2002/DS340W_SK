@@ -121,7 +121,16 @@ def _predict_test(
         model_path, config=model_config, local_files_only=True
     )
     model.resize_token_embeddings(len(tokenizer))
-    AutoDeltaModel.from_finetuned(str(output_dir / "delta"), backbone_model=model)
+    delta_model = AutoDeltaModel.from_finetuned(str(output_dir / "delta"), backbone_model=model)
+    expected_mode = values.get("lora_scaling_mode", "original")
+    if getattr(delta_model, "lora_scaling_mode", "original") != expected_mode:
+        raise ValueError("Reloaded adapter scaling mode differs from its configuration")
+    for module in delta_model.delta_modules:
+        expected = values["lora_alpha"] / (
+            math.sqrt(values["lora_r"]) if expected_mode == "sqrt_rank" else values["lora_r"]
+        )
+        if not math.isclose(module.scaling, expected, rel_tol=1e-12):
+            raise ValueError("Reloaded adapter multiplier is incorrect")
     model.parallelize()
     model.eval()
 
@@ -237,6 +246,27 @@ def collect(*, config_path: Path, artifact_dir: Path) -> dict[str, Any]:
         "upstream_peak_memory_gb": _read_json(output_dir / "performance_results.json")["peak_memory"],
         "wall_seconds": process["wall_seconds"],
     }
+    extra_files = None
+    if "lora_scaling_mode" in values:
+        delta_config = _read_json(output_dir / "delta/config.json")
+        if delta_config.get("lora_scaling_mode") != values["lora_scaling_mode"]:
+            raise ValueError("Saved delta lacks the correct scaling mode")
+        sidecar = _read_json(checkpoint / "delta-config.json")
+        if sidecar.get("lora_scaling_mode") != values["lora_scaling_mode"]:
+            raise ValueError("Native checkpoint lacks its scaling configuration")
+        counts = _read_json(output_dir / "parameter-counts.json")
+        from ds340w_repro.config_schema import expected_trainable_counts
+        if any(counts[key] != value for key, value in expected_trainable_counts(values["lora_r"]).items()):
+            raise ValueError("Observed trainable parameter counts differ from the declared scope")
+        metrics.update({"lora_scaling_mode": values["lora_scaling_mode"], **counts,
+                        **_read_json(output_dir / "cuda-memory.json")})
+        extra_files = {
+            f"evidence/{name}": output_dir / name
+            for name in ("adapter-gradients.jsonl", "parameter-counts.json", "cuda-memory.json",
+                         "execution-tree.json", "process-result.json", "delta-config.json")
+        }
+        extra_files["delta/config.json"] = output_dir / "delta/config.json"
+        extra_files["delta/pytorch_model.bin"] = output_dir / "delta/pytorch_model.bin"
     preserved = preserve_checkpoint_artifact(
         source_checkpoint=checkpoint,
         resolved_config_path=config_path,
@@ -244,6 +274,7 @@ def collect(*, config_path: Path, artifact_dir: Path) -> dict[str, Any]:
         predictions=records,
         metrics=metrics,
         artifact_dir=artifact_dir,
+        extra_files=extra_files,
     )
     verified = verify_checkpoint_artifact(preserved.artifact_dir)
     return {
