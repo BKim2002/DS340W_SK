@@ -9,11 +9,16 @@
       "expected_config_count": 1
     },
     "confirmation": {
-      "authorized": false,
-      "config_sha256": [],
-      "expected_config_count": null,
+      "authorized": true,
+      "config_sha256": [
+        "9da55c65eba9277faa195219df47ada8998a3731c5e147fc9d19f259a009bbbb",
+        "6f0043236d12d138c6992cce7f5609cc0dacf194ff323c48513ba1fee0f10e80",
+        "b130965a2193ecce095f7fb2b22829ec3eaa9bead4e6900bb92bd655c2da852e",
+        "6f9f43b12a9259faaf0a9ccf24b9ea7cbcdf1c64e39049ca67c827ac6de057d2"
+      ],
+      "expected_config_count": 4,
       "requires_stage": "rank",
-      "selected_rank": null
+      "selected_rank": 16
     },
     "rank": {
       "authorized": true,

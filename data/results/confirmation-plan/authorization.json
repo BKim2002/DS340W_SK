@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "status": "authorized",
+  "authority": "User request: Run our confirmation runs. 2026-11-19",
+  "experiments": [
+    "confirmation-r8-seed17",
+    "confirmation-r8-seed23",
+    "confirmation-r16-seed17",
+    "confirmation-r16-seed23"
+  ],
+  "scaling": "original alpha/rank",
+  "max_steps": 20000,
+  "test_rows": 436,
+  "config_sha256": [
+    "9da55c65eba9277faa195219df47ada8998a3731c5e147fc9d19f259a009bbbb",
+    "6f0043236d12d138c6992cce7f5609cc0dacf194ff323c48513ba1fee0f10e80",
+    "b130965a2193ecce095f7fb2b22829ec3eaa9bead4e6900bb92bd655c2da852e",
+    "6f9f43b12a9259faaf0a9ccf24b9ea7cbcdf1c64e39049ca67c827ac6de057d2"
+  ],
+  "expanded_projected_gpu_hours": 40.43748609080096,
+  "cap_gpu_hours": 48,
+  "final_unseen_accessed": false,
+  "backbone_and_course_data_verified": true
+}

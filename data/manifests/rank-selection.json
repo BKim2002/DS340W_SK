@@ -1,0 +1,22 @@
+{
+  "artifact_kind": "rank-selection",
+  "correct_by_rank": {
+    "16": 417,
+    "2": 413,
+    "4": 414,
+    "8": 412
+  },
+  "final_unseen_accessed": false,
+  "result_config_sha256_by_rank": {
+    "16": "13c0a5ca9c5b509911307478b0a3559dcc5bcb813334f0ac609089e619f355ae",
+    "2": "78b381a05e2a881b81ee547a1ae16feb450c6e876d8c0ec1874d1dc74b3b3ded",
+    "4": "c0da6ea19c1556b64a97d23a02cb3a61d756061aecef5390ff4c70241199e79a",
+    "8": "e757994a75e6c97aaf077bb03b0757d38f8db7f57ad2ed9a047d03e38a0b099c"
+  },
+  "schema_version": 1,
+  "selected_checkpoint_path": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/artifacts/retained/rank-r16",
+  "selected_checkpoint_sha256": "67b1ce61db43c29772ddc7fa29a232bf0f237793a3c746ea7beadd2454b43235",
+  "selected_rank": 16,
+  "status": "verified",
+  "updated_projected_gpu_hours": 36.45030969078108
+}
