@@ -129,8 +129,8 @@ def queue() -> None:
         # Acquire before writing status so a second controller cannot replace it.
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         done, pushed = [], True
-        def status(phase: str, **extra):
-            write(STATUS, {'status': phase, 'experiments': list(EXPERIMENTS), 'completed': done[:],
+        def status(state: str, **extra):
+            write(STATUS, {'status': state, 'experiments': list(EXPERIMENTS), 'completed': done[:],
                            'pid': os.getpid(), 'updated_at_utc': datetime.now(timezone.utc).isoformat(), **extra})
         try:
             validate_plan()

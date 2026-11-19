@@ -62,3 +62,39 @@ def test_queue_never_overwrites_existing_training(tmp_path, monkeypatch, case):
     else:
         with pytest.raises(ValueError, match='overwrite|mismatched'):
             confirmation.completed_training(name)
+
+
+def test_queue_collects_completed_runs_and_reports_all_four_without_retraining(tmp_path, monkeypatch):
+    records, commands = [], []
+    monkeypatch.setattr(confirmation, 'ROOT', tmp_path)
+    monkeypatch.setattr(confirmation, 'validate_plan', lambda: None)
+    monkeypatch.setattr(confirmation, 'budget', lambda: {'status':'PASS','projected_gpu_hours':40})
+    monkeypatch.setattr(confirmation, 'completed_training', lambda name: True)
+    monkeypatch.setattr(confirmation, '_verified_result', lambda **kwargs: {})
+    monkeypatch.setattr(confirmation, 'publish', lambda name: True)
+    monkeypatch.setattr(confirmation, 'write', lambda path, value: records.append(value))
+    monkeypatch.setattr(confirmation.subprocess, 'run', lambda command, **kwargs: commands.append(command))
+    confirmation.queue()
+    assert len(commands) == 4
+    assert all('scripts/collect_retained_result.py' in command for command in commands)
+    assert records[-1]['status'] == 'complete'
+    assert records[-1]['completed'] == list(confirmation.EXPERIMENTS)
+    assert any(r.get('phase') == 'collecting_and_reloading' for r in records)
+
+
+def test_queue_stops_after_first_training_failure(tmp_path, monkeypatch):
+    import subprocess
+    records, commands = [], []
+    monkeypatch.setattr(confirmation, 'ROOT', tmp_path)
+    monkeypatch.setattr(confirmation, 'validate_plan', lambda: None)
+    monkeypatch.setattr(confirmation, 'budget', lambda: {'status':'PASS','projected_gpu_hours':40})
+    monkeypatch.setattr(confirmation, 'completed_training', lambda name: False)
+    monkeypatch.setattr(confirmation, 'write', lambda path, value: records.append(value))
+    def fail(command, **kwargs):
+        commands.append(command)
+        raise subprocess.CalledProcessError(1, command)
+    monkeypatch.setattr(confirmation.subprocess, 'run', fail)
+    with pytest.raises(subprocess.CalledProcessError):
+        confirmation.queue()
+    assert len(commands) == 1
+    assert records[-1]['status'] == 'failed' and records[-1]['completed'] == []
