@@ -2,7 +2,7 @@
 
 This DS 340W project fine-tunes `google/t5-base-lm-adapt` for SST-2 sentiment classification using the original OpenDelta code. It compares original LoRA scaling (`alpha / rank`) with an optional rank-stabilized variant (`alpha / sqrt(rank)`) at ranks 2, 4, 8, and 16. The model generates `0` for a negative sentence and `1` for a positive sentence.
 
-For the technical demo, follow the Windows instructions below. They load the models already trained on the research desktop and run new predictions on the full 436-example course Test set. You can run this path on a CPU with Python; it needs no NVIDIA GPU, CUDA, WSL, or Git.
+For the evaluation, follow the Windows instructions below. They load the models already trained on the research desktop and run new predictions on the full 436-example course Test set. You can run this path on a CPU with Python; it needs no NVIDIA GPU, CUDA, WSL, or Git.
 
 ## What is in this repository?
 
@@ -46,9 +46,9 @@ On a clean Windows installation, also install Microsoft's [Visual C++ x64 Redist
 
 ### 2. Download the project from GitHub
 
-For the recording, show [this repository](https://github.com/BKim2002/DS340W_SK) in your browser. Choose **Code > Download ZIP**, extract the ZIP, and open PowerShell inside the extracted `DS340W_SK-main` folder. That folder must contain `README.md`, `requirements-demo.txt`, and `demo`.
+Choose **Code > Download ZIP**, extract the ZIP, and open PowerShell inside the extracted `DS340W_SK-main` folder. That folder must contain `README.md`, `requirements-demo.txt`, and `demo`.
 
-Alternatively, these PowerShell commands download and extract the same repository into a new folder in Downloads. Start recording before downloading if this is your assignment demonstration:
+Alternatively, these PowerShell commands download and extract the same repository into a new folder in Downloads.
 
 ```powershell
 $demoFolder = Join-Path $env:USERPROFILE 'Downloads\DS340W-demo'
@@ -135,45 +135,6 @@ You can also evaluate one model:
 
 The available names are `original-r2`, `modified-r2`, `original-r4`, `modified-r4`, `baseline`, `modified`, `original-r16`, and `modified-r16`.
 
-## Recording walkthrough
-
-Use a computer that has never run the project. You may install Python beforehand, but leave downloading and running the project for the recording. Sign into PSU Zoom, start recording, share your screen, and keep the required team members on webcam before downloading the GitHub repository.
-
-Show the GitHub download, follow setup steps 3-5, and explain these parts of `demo/run.py` while it runs:
-
-1. `ensure_backbone` downloads the pinned pretrained model and verifies its files.
-2. `load_adapter` restores the saved LoRA and LayerNorm parameters in the corresponding attention layers.
-3. `evaluate` turns each sentence into `sst2 sentence: ...`, generates `0` or `1`, and calculates accuracy from the Test labels.
-4. The last check compares every newly generated prediction with the retained result. The final table and the new metrics files show the outcome.
-
-Show the matching rows in the research paper. Use `--model both` for the two rank-8 rows or `--model all` for the complete seed-42 table. Explain that training was completed on the research desktop and that this demonstration runs saved-model evaluation on the unused laptop. Whether checkpoint evaluation satisfies the assignment is for the instructor to confirm.
-
-## Options and troubleshooting
-
-For a slower CPU or lower memory use, reduce the batch size and thread count:
-
-```powershell
-.\.venv\Scripts\python.exe demo/run.py --model both --batch-size 2 --threads 2
-```
-
-After the first successful download, the same computer can run without Internet:
-
-```powershell
-.\.venv\Scripts\python.exe demo/run.py --model both --offline
-```
-
-The `--offline` option checks the cached files and fails if any are missing or corrupt. To choose another cache or output location, use `--cache-dir 'D:\model-cache'` or `--output-dir 'D:\demo-results'`.
-
-If `py -3.12` fails, install the 64-bit Python 3.12 launcher as described above and reopen PowerShell. If `requirements-demo.txt` cannot be found, use `Set-Location` to enter the folder containing this README. A failed base-model download can be retried with the same command; completed files are reused and the incomplete file is downloaded again. If a bundled checkpoint or Test file fails its checksum, download a fresh repository copy rather than editing the expected hash.
-
-If importing PyTorch reports a missing DLL, install or repair the Microsoft Visual C++ x64 runtime linked in step 1, then reopen PowerShell. Wait for dependency installation to finish successfully before running the evaluation command.
-
-Fast package and data checks are also available:
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s demo -p 'test_*.py' -v
-```
-
 ## Original training code and provenance
 
 Training used the pinned OpenDelta source at commit `20e426f716ea53618657cd34bbfc4b347b98cd74`, with the project's patches and saved configurations. The original LoRA correction is `alpha / rank * (x @ A.T @ B.T)`; the modified block changes the divisor to `sqrt(rank)`. The portable loader attaches that same copied block in parallel with each attention projection and restores every learned LoRA and LayerNorm tensor. It uses CPU PyTorch 2.5.1 and Transformers 4.46.3, separate from the older GPU training stack.
@@ -184,6 +145,6 @@ To inspect the full authors' code, use Git with submodules:
 git clone --recurse-submodules https://github.com/BKim2002/DS340W_SK.git
 ```
 
-The existing `scripts/bootstrap_wsl.sh` and research controllers are for Ubuntu 22.04 / Python 3.10 / NVIDIA CUDA training. The resolved research configurations contain workstation-specific paths and experiment authorization checks; they are not the fresh-laptop demo commands. The CPU path above is self-contained and does not read the research desktop's `artifacts/` or `runtime/` folders.
+The existing `scripts/bootstrap_wsl.sh` and research controllers are for Ubuntu 22.04 / Python 3.10 / NVIDIA CUDA training. The resolved research configurations contain workstation-specific paths and experiment authorization checks; they are not the fresh-environment demo commands. The CPU path above is self-contained and does not read the research desktop's `artifacts/` or `runtime/` folders.
 
 The pretrained base is [Google's T5-base-lm-adapt](https://huggingface.co/google/t5-base-lm-adapt/tree/bf48a6b7de15c6afe1e27e1a51aa1ea4626f96bf). The dataset is [Stanford SST-2](https://nlp.stanford.edu/sentiment/) from the public [GLUE archive](https://dl.fbaipublicfiles.com/glue/data/SST-2.zip); the course split is documented in `data/manifests/sst2-split-manifest.json`. Upstream code comes from [OpenDelta](https://github.com/thunlp/OpenDelta/tree/20e426f716ea53618657cd34bbfc4b347b98cd74) and [Microsoft LoRA](https://github.com/microsoft/LoRA). Their license texts and original code notice are included under `demo/licenses/` and in `demo/low_rank_linear.py`.
