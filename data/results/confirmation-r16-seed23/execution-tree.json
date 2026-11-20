@@ -1,0 +1,36 @@
+{
+  "applied_patch_sha256": [
+    "df8f3d60424a3885516942e83aa2a84bb58a25b7a4f8235f2fae58e42d63477a",
+    "cc0d3ad6867011ac112a56f834b4d799aebbb0602fcf1150682284683a56b8ed",
+    "7f02958a6a1e01bbe4e39e88d17ed90a375f234af58d735fc0dc9c6bef2b4276",
+    "5e442b7644af39d4fa0d42ebaa5a0e100e085a0e2a797cbc92709c4e5dd63abf",
+    "fdb3f2f1fe8529192aad4fcd733225bfe92fe76caca7c2bb58cebce27e75506d"
+  ],
+  "course_data_binding": {
+    "course_data_manifest_sha256": "400143658894e4460f67d8e96dc2e69225150d1ed9ec15ec3da3cef0f37bff66",
+    "final_unseen_exposed": false,
+    "test_sha256": "f66182758e73fc1c7918d68810c57dc2699f5fda59ebc9be6ebc78af1758c575",
+    "training_sha256": "af58ad63483a33861ded0d2bb688f7f5394ebd6784ebea953add529a572e6652",
+    "verified": true,
+    "visible_partitions": [
+      "Training",
+      "Test"
+    ]
+  },
+  "model_input_binding": {
+    "file_count": 7,
+    "source_lock_sha256": "4aae9bca3d409d7b075f6440bf4f7b3ce3023f8fbd24391ec1fa514148cb6b0d",
+    "verified": true
+  },
+  "patch_series": "patches/series.json",
+  "patch_series_sha256": "e199da8b5921eac615610908033a1df13d307cbd4e34dcc70d30e98e64981e01",
+  "post_patch_runner_sha256": "5803791b0031517171e7a9ecbcf76433ceb64f96995d91d67a60ef57d8219192",
+  "pre_patch_runner_sha256": "64746fa2643709fe4b22a5572ed8936f1dc9fe8764c6148b8ff6ac9bda4c7a47",
+  "project_git_commit": "f6639d02879a1a2c6555485ae23b5524ef1dec79",
+  "project_worktree_clean": true,
+  "resolved_config_sha256": "6f9f43b12a9259faaf0a9ccf24b9ea7cbcdf1c64e39049ca67c827ac6de057d2",
+  "root": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/runtime/confirmation-r16-seed23",
+  "runner": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/runtime/confirmation-r16-seed23/examples/legacies/examples_seq2seq/run_seq2seq.py",
+  "runner_config_sha256": "42ba96bb6d3a9a23ae20ba59822c8c0bfd6f22bcd5a8bb8dc1d91aab99e55293",
+  "upstream_commit": "20e426f716ea53618657cd34bbfc4b347b98cd74"
+}

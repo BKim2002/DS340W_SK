@@ -1,0 +1,9 @@
+{
+  "accuracy_percent": 95.18348623853211,
+  "correct_count": 415,
+  "eval_loss": 0.07067125478605611,
+  "original_eval_loss": 0.07067129760980606,
+  "test_rows": 436,
+  "upstream_peak_memory_gb": 1.849443359375,
+  "wall_seconds": 9356.608217291003
+}
