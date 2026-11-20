@@ -42,6 +42,8 @@ py -3.12 --version
 
 Use Python 3.12 for the commands below even if another Python version is already installed. The separate training package's Python 3.10 requirement does not apply to this standalone demo.
 
+On a clean Windows installation, also install Microsoft's [Visual C++ x64 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170), which supplies runtime libraries used by PyTorch. Choose the X64 download, run the installer, and restart if it requests a restart. This is a runtime installer; the demo does not require Visual Studio. PyTorch documents missing runtime libraries in its [Windows installation FAQ](https://docs.pytorch.org/docs/stable/notes/windows.html).
+
 ### 2. Download the project from GitHub
 
 For the recording, show [this repository](https://github.com/BKim2002/DS340W_SK) in your browser. Choose **Code > Download ZIP**, extract the ZIP, and open PowerShell inside the extracted `DS340W_SK-main` folder. That folder must contain `README.md`, `requirements-demo.txt`, and `demo`.
@@ -163,6 +165,8 @@ After the first successful download, the same computer can run without Internet:
 The `--offline` option checks the cached files and fails if any are missing or corrupt. To choose another cache or output location, use `--cache-dir 'D:\model-cache'` or `--output-dir 'D:\demo-results'`.
 
 If `py -3.12` fails, install the 64-bit Python 3.12 launcher as described above and reopen PowerShell. If `requirements-demo.txt` cannot be found, use `Set-Location` to enter the folder containing this README. A failed base-model download can be retried with the same command; completed files are reused and the incomplete file is downloaded again. If a bundled checkpoint or Test file fails its checksum, download a fresh repository copy rather than editing the expected hash.
+
+If importing PyTorch reports a missing DLL, install or repair the Microsoft Visual C++ x64 runtime linked in step 1, then reopen PowerShell. Wait for dependency installation to finish successfully before running the evaluation command.
 
 Fast package and data checks are also available:
 
