@@ -1,0 +1,16 @@
+{
+  "accuracy_percent": 94.95412844036697,
+  "artifact_directory_sha256": "1227ea420cbe0f15aecb6ee42ce752946687361197ae5074ebbd4d010dc97db9",
+  "artifact_kind": "retained-run-result",
+  "artifact_manifest_sha256": "eef6e401dcc879cc741752a66cf42ed609bc31edd702fc3446c0d04f000e9d93",
+  "artifact_path": "/mnt/c/Users/tjrdu/OneDrive/College/DS 340W/artifacts/retained/confirmation-r8-seed23",
+  "checkpoint_step": 5100,
+  "config_sha256": "6f0043236d12d138c6992cce7f5609cc0dacf194ff323c48513ba1fee0f10e80",
+  "correct_count": 414,
+  "experiment_id": "confirmation-r8-seed23",
+  "final_unseen_accessed": false,
+  "observer_wall_seconds": 13.30345567400218,
+  "original_process_wall_seconds": 9781.518247401997,
+  "schema_version": 1,
+  "status": "verified"
+}
