@@ -1,0 +1,15 @@
+# Local environments, generated evaluations, and desktop training artifacts.
+.venv*/
+__pycache__/
+.pytest_cache/
+/outputs/
+/artifacts/
+/runtime/
+/tmp/
+/docs/
+/Activity Log/
+*.docx
+*.pptx
+*.mp4
+.DS_Store
+Thumbs.db

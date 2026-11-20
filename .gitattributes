@@ -8,3 +8,8 @@
 *.toml text eol=lf
 .gitattributes text eol=lf
 .gitmodules text eol=lf
+
+# Keep demo checksums stable across Windows and Linux checkouts.
+demo/** -text
+demo/checkpoints/*.bin binary
+demo/licenses/*.txt text eol=lf
