@@ -2,7 +2,7 @@
 
 This DS 340W project fine-tunes `google/t5-base-lm-adapt` for SST-2 sentiment classification using the original OpenDelta code. It compares original LoRA scaling (`alpha / rank`) with an optional rank-stabilized variant (`alpha / sqrt(rank)`) at ranks 2, 4, 8, and 16. The model generates `0` for a negative sentence and `1` for a positive sentence.
 
-For the evaluation, follow the Windows instructions below. They load the models already trained on the research desktop and run new predictions on the full 436-example course Test set. You can run this path on a CPU with Python; it needs no NVIDIA GPU, CUDA, WSL, or Git.
+For the evaluation, follow the Windows instructions below. They load the models already trained on the research desktop and run new predictions on the full 436-example course Test set. You can run this path on a CPU with Python; it needs no GPU, CUDA, WSL, or Git.
 
 ## What is in this repository?
 
@@ -24,7 +24,7 @@ The protected final Validation (Unseen) partition is not included or opened by t
 
 ## Windows 11 setup
 
-Use 64-bit Windows, 64-bit **Python 3.12**, and preferably 16 GB RAM. Allow about 6 GB of free disk space for Python packages, the repository, and the base model. Internet access is needed for installation and the first model download. Your laptop's integrated GPU is fine because evaluation uses the CPU.
+Use 64-bit Windows, 64-bit **Python 3.12**, and preferably 16 GB RAM. Allow about 6 GB of free disk space for Python packages, the repository, and the base model. Internet access is needed for installation and the first model download. GPU is not required because evaluation uses the CPU.
 
 ### 1. Install Python
 
@@ -99,7 +99,7 @@ VERIFIED: all 436 live CPU predictions match the retained training result.
 
 These are freshly generated predictions, followed by a comparison with the saved records. If even one prediction differs, or a required file fails its checksum, the command exits with an error. Runtime depends on the CPU; allow several minutes per model on an older laptop, plus installation and download time.
 
-### 5. Show the newly generated files
+### 5. Check the newly generated files
 
 ```powershell
 Get-Content outputs/portable-demo/baseline/metrics.json
